@@ -1,0 +1,532 @@
+# =============================================================================
+# MSKKP Tissue Champion — RNA-seq gold-standard schema
+# =============================================================================
+# A tissue-agnostic data contract for the 7 musculoskeletal tissue champions.
+# Two tiers are defined:
+#   1. required_structure  — what ANY conforming dataset must contain to be valid
+#   2. champion_criteria   — the extra quality bar a dataset must clear to serve
+#                            as the tissue's REFERENCE ("champion") dataset
+# Tissue-specific content (the cell-type ontology, expected markers) is not
+# hard-coded here; each champion supplies it via the `tissue_profile` block.
+# =============================================================================
+
+schema:
+  name: mskkp-rnaseq-gold-standard
+  version: 0.1.0-draft
+  status: draft                       # draft | review | approved
+  description: >
+    Standard for single-cell / single-nucleus RNA-seq reference datasets across
+    musculoskeletal tissue types. Defines object layout, required metadata, and
+    the quality thresholds that qualify a dataset as a tissue "champion".
+  maintainers:
+    - role: initiative_lead
+      name: Jeremy Arbesfeld (Knowledge Portal Network)
+    - role: schema_author
+      name: Luca Tucciarone (Gaulton Lab)   # original template
+  applies_to: musculoskeletal tissues (7 champions)
+
+# -----------------------------------------------------------------------------
+# 1. OBJECT — file format and expression matrices
+# -----------------------------------------------------------------------------
+object:
+  # A conforming dataset is delivered as ONE of these serialized objects.
+  formats:
+    - h5ad            # AnnData (Python)  — preferred
+    - rds             # Seurat (R)        — accepted equivalent
+
+  matrices:
+    raw_counts:
+      required: true
+      description: Unnormalized integer UMI counts.
+      dtype: integer
+      location:
+        h5ad: adata.layers["counts"]        # (X may alternatively hold raw; see note)
+        seurat: obj[["RNA"]]@counts          # Seurat "counts" slot
+      note: >
+        If raw counts are stored in adata.X instead of a layer, that must be
+        stated in uns/schema. Exactly one location must hold raw integer counts.
+
+    normalized:
+      required: true
+      description: Log-normalized expression (Seurat "data" slot equivalent).
+      dtype: float
+      default_method: LogNormalize          # log1p(counts / total * scale_factor)
+      scale_factor: 10000
+      location:
+        h5ad: adata.X                        # or adata.layers["data"]
+        seurat: obj[["RNA"]]@data            # Seurat "data" slot
+
+# -----------------------------------------------------------------------------
+# 2. OBS — cell-level metadata (one row per cell)
+# -----------------------------------------------------------------------------
+# Each entry: required (bool), dtype, and a human description. `allowed` lists a
+# controlled vocabulary where one applies; `min_levels` etc. are checked by the
+# champion_criteria below.
+obs:
+
+  # ANNOTATION LEVELS — every cell gets two labels, from broad to specific:
+  #   Level 1 (celltype)     = the broad category  — the general KIND of cell.
+  #                            e.g. "Myonucleus" (a muscle-fibre cell), "Immune".
+  #   Level 2 (cell_subtype) = the specific subtype INSIDE that category.
+  #                            e.g. "Myonucleus-Type-I" vs "-Type-II"; "Macrophage".
+  # Think Country (Level 1) -> City (Level 2). Every Level-2 label must sit under
+  # exactly one Level-1 label. At least these two levels are required.
+  annotations:
+    celltype:                                  # LEVEL 1 — broad category
+      required: true
+      dtype: categorical
+      level: 1                                 # 1 = broadest label
+      description: >
+        Broad cell-type label (the general category), e.g. "Myonucleus", "FAP".
+      ontology_ref: CL                         # Cell Ontology, where mappable
+    cell_subtype:                              # LEVEL 2 — specific subtype
+      required: true
+      dtype: categorical
+      level: 2                                 # 2 = one step more specific than celltype
+      nests_under: celltype                    # each subtype belongs to one celltype
+      description: >
+        Specific subtype within the celltype, e.g. "Myonucleus-Type-I" / "-Type-II".
+      ontology_ref: CL
+    # Deeper levels (level: 3 = an even finer subtype, and so on) are allowed but
+    # not required.
+
+  donor:
+    donor_id:
+      required: true
+      dtype: categorical
+      description: Stable identifier for the biological donor/sample of origin.
+    disease_status:
+      required: false                        # "if available — particularly valuable"
+      dtype: categorical
+      description: Clinical group; use "Control" for unaffected donors.
+      recommended_values: [Control, Disease] # tissue may refine (e.g. Sarcopenia)
+    age:
+      required: false
+      dtype: numeric
+      units: years
+    sex:
+      required: false
+      dtype: categorical
+      allowed: [M, F, unknown]
+    assay:
+      required: true                         # drives the percent.mt threshold below
+      dtype: categorical
+      allowed: [scRNA-seq, snRNA-seq]
+    anatomical_site:
+      required: false
+      dtype: categorical
+      description: Sampling site within the tissue (tissue-specific vocabulary).
+
+  qc_metrics:
+    nCount_RNA:
+      required: true
+      dtype: integer
+      description: Total UMIs per cell.
+    nFeature_RNA:
+      required: true
+      dtype: integer
+      description: Number of genes detected per cell.
+    percent.mt:
+      required: false                        # computable if absent ("we can compute this")
+      computable: true
+      dtype: float
+      units: percent
+      description: Percentage of counts from mitochondrial genes.
+
+# -----------------------------------------------------------------------------
+# 3. VAR — gene-level metadata (one row per gene)
+# -----------------------------------------------------------------------------
+# Genes are keyed by a STABLE IDENTIFIER (gene_id), not by symbol. The readable
+# English symbol travels alongside as gene_symbol. Use gene_id as the canonical
+# gene key everywhere it matters (matching, merging across tissues); treat
+# gene_symbol as a human-readable label only.
+var:
+  index:
+    field: gene_id
+    required: true
+    description: >
+      Stable gene identifier used as the gene key — either an HGNC ID
+      (e.g. "HGNC:7577") or an Ensembl gene ID (e.g. "ENSG00000092054").
+      Record which system is used in uns.schema.gene_id_system.
+  fields:
+    gene_symbol:
+      required: true
+      dtype: string
+      description: >
+        Human-readable English symbol associated with the gene_id (e.g. "MYH7").
+        For readability only — gene_id is the canonical key.
+    mt:
+      required: false
+      dtype: boolean
+      description: Flags mitochondrial genes (used to compute percent.mt).
+    highly_variable:
+      required: false
+      dtype: boolean
+      description: Highly variable genes, if computed.
+
+# -----------------------------------------------------------------------------
+# 4. UNS — dataset-level provenance
+# -----------------------------------------------------------------------------
+uns:
+  schema:
+    required: true
+    description: Provenance block naming this standard + version and any deviations.
+    fields:
+      standard: mskkp-rnaseq-gold-standard
+      version: 0.1.0-draft
+      tissue: <tissue_id>
+      gene_id_system: [hgnc, ensembl]        # which identifier system var.gene_id uses
+      X_holds: [normalized, raw]             # what adata.X contains
+  donor_metadata:
+    required: false
+    description: Optional donor-indexed summary table (one row per donor_id).
+
+# -----------------------------------------------------------------------------
+# 5. REQUIRED_STRUCTURE — the minimum bar for a VALID (conforming) dataset
+# -----------------------------------------------------------------------------
+required_structure:
+  - object.formats is one of [h5ad, rds]
+  - object.matrices.raw_counts present
+  - object.matrices.normalized present
+  - obs.annotations has both celltype (broad) and cell_subtype (specific) present
+  - obs.donor.donor_id present
+  - obs.donor.assay present
+  - obs.qc_metrics.nCount_RNA present
+  - obs.qc_metrics.nFeature_RNA present
+  - uns.schema present
+
+# -----------------------------------------------------------------------------
+# 6. CHAMPION_CRITERIA — extra bar to qualify as the tissue REFERENCE dataset
+# -----------------------------------------------------------------------------
+# Each rule is machine-checkable: field + operator + threshold, optionally gated
+# by a `when` condition. `severity: required` rules must all pass; `recommended`
+# rules are reported but do not block champion status.
+champion_criteria:
+
+  - id: min_counts
+    description: Every cell has more than 500 total counts.
+    field: obs.nCount_RNA
+    aggregate: min
+    operator: ">"
+    threshold: 500
+    severity: required
+
+  - id: max_mito_snRNA
+    description: Mitochondrial fraction under 3% for single-nucleus assays.
+    when: obs.assay == "snRNA-seq"
+    field: obs.percent.mt
+    aggregate: max
+    operator: "<"
+    threshold: 3
+    units: percent
+    severity: required
+
+  - id: max_mito_scRNA
+    description: Mitochondrial fraction under 15% for single-cell assays.
+    when: obs.assay == "scRNA-seq"
+    field: obs.percent.mt
+    aggregate: max
+    operator: "<"
+    threshold: 15
+    units: percent
+    severity: required
+
+  - id: annotation_depth
+    description: >
+      Both label layers are present — a broad celltype AND a specific
+      cell_subtype (not just one of them).
+    field: obs.annotations.levels
+    operator: ">="
+    threshold: 2
+    severity: required
+
+  - id: clusters_well_defined
+    description: >
+      Each subtype nests under exactly one celltype and is represented by a
+      reasonable number of cells (proxy for "clearly defined clusters").
+    checks:
+      - every cell_subtype maps to exactly one celltype
+      - min cells per cell_subtype >= 20        # tunable per tissue
+    severity: required
+
+  - id: donor_count
+    description: At least 10 donors.
+    field: obs.donor_id
+    aggregate: n_unique
+    operator: ">="
+    threshold: 10
+    severity: required
+
+  - id: control_and_disease
+    description: Includes Control and, where available, disease donors.
+    field: obs.disease_status
+    check: contains "Control" and >= 2 distinct values
+    severity: recommended            # disease samples "if available"
+
+  - id: cell_count
+    description: At least 50,000 cells.
+    field: obs
+    aggregate: n_rows
+    operator: ">="
+    threshold: 50000
+    severity: required
+
+# -----------------------------------------------------------------------------
+# 7. TISSUE_PROFILES — one fill-in block per champion
+# -----------------------------------------------------------------------------
+# This is the ONLY tissue-specific part of the standard. There is one block per
+# musculoskeletal tissue; each champion owns and completes their own block.
+#
+# HOW TO FILL IN YOUR BLOCK
+#   1. champion            -> add your name + contact.
+#   2. default_assay       -> confirm scRNA-seq vs snRNA-seq for your tissue
+#                             (this sets which percent.mt threshold applies).
+#   3. disease_conditions  -> list the groups in your cohort (keep "Control").
+#   4. cell_ontology       -> the heart of it. A two-layer list of your cell
+#                             labels, broad to specific:
+#                               broad celltype (the general category)
+#                                 -> specific subtype: [marker gene_ids]
+#                             Markers are listed by gene_id (HGNC or Ensembl),
+#                             the same identifier used as the gene key in var.
+#                             The gene_symbol shown in a trailing comment is only
+#                             a readable aid.
+#                             e.g.  Myonucleus:
+#                                     Myonucleus-Type-I: [HGNC:7577, HGNC:11949]  # MYH7, TNNT1
+#                             Add / rename / delete freely.
+#   5. status              -> change "draft-starter" to "confirmed" once you've
+#                             reviewed it. Set min_cells_per_subtype if you want
+#                             to override the default cluster-size check.
+#
+# NOTE ON THE SEEDED CONTENT
+#   skeletal_muscle is a fully worked example. The other six blocks are
+#   pre-seeded with well-established starter populations ONLY to show the pattern
+#   and save a blank page — they are marked `status: draft-starter`.
+#   Each champion MUST review their whole block line by line and sign off, with
+#   particular attention to:
+#     * disease_conditions  — do these match your actual cohort / naming?
+#     * cell_ontology        — are the celltypes, subtypes, and marker genes
+#                              correct, complete, and named the way you'd want?
+#   The seeded markers are illustrative, not authoritative. When a block has been
+#   reviewed, set its `status:` to `confirmed`.
+#   (`champion.confirmed` is a separate flag: it records whether the person has
+#   agreed to serve as champion, NOT whether the block's content is finalised.)
+#
+#   GENE IDENTIFIERS: the standard keys genes by gene_id (HGNC or Ensembl). The
+#   seed marker lists below are written as gene_symbols for readability only and
+#   MUST be replaced with the corresponding gene_id (keep the symbol in a trailing
+#   comment if you like). Champions supply the gene_ids they use in their data.
+#
+# Blank template to copy for any new subtype:
+#   <Level1_celltype>:
+#     <Level1>-<subtype>: [gene_id_1, gene_id_2]   # optional: SYMBOL1, SYMBOL2
+
+tissue_profiles:
+
+  cartilage:
+    champion:
+      - name: Hironori Hojo
+        affiliation: Osaka University
+        email: hojo.hironori.dent@osaka-u.ac.jp
+        confirmed: true
+    tissue_id: cartilage
+    default_assay: snRNA-seq            # confirm — matrix-rich tissue, hard to dissociate
+    status: draft-starter               # -> "confirmed" after champion review
+    disease_conditions: [Control, Osteoarthritis]
+    min_cells_per_subtype: 20           # optional override of champion criterion
+    cell_ontology:
+      Chondrocyte:
+        Chondrocyte-Superficial:  [PRG4, CILP]
+        Chondrocyte-Homeostatic:  [COL2A1, ACAN, SOX9]
+        Chondrocyte-Hypertrophic: [COL10A1, IBSP]
+      Fibrochondrocyte:
+        Fibrochondrocyte: [COL1A1, COL3A1]
+      Progenitor:
+        Chondroprogenitor: [GDF5, CD34]
+    notes: >
+      Articular cartilage. Consider zonal (superficial/mid/deep) structure and
+      OA-associated states. Confirm whether osteochondral / bone-interface cells
+      belong here or in the bone block to avoid double-counting.
+
+  tendon:
+    champion:
+      - name: Sarah Snelling
+        affiliation: University of Oxford (NDORMS)
+        email: sarah.snelling@ndorms.ox.ac.uk
+        confirmed: true
+      - name: Anne Nichols
+        affiliation: University of Rochester Medical Center
+        email: Anne_Nichols@urmc.rochester.edu
+        confirmed: true
+    tissue_id: tendon
+    default_assay: snRNA-seq            # confirm — dense collagenous matrix
+    status: draft-starter
+    disease_conditions: [Control, Tendinopathy]
+    min_cells_per_subtype: 20
+    cell_ontology:
+      Tenocyte:
+        Tenocyte:            [SCX, MKX, TNMD]
+        Tenocyte-Fibro:      [COL1A1, COL3A1]
+      Progenitor:
+        Tendon-stem-progenitor: [PDGFRA, THY1]
+      Vascular:
+        Endothelial: [PECAM1, VWF]
+        Pericyte:    [PDGFRB, RGS5]
+      Immune:
+        Macrophage: [CD68, MRC1]
+    notes: >
+      Confirm enthesis (bone-tendon junction) handling and whether to separate
+      mid-substance from peritenon populations.
+
+  bone_marrow:
+    champion:
+      - name: Noriaki Ono
+        affiliation: UTHealth Houston
+        email: Noriaki.Ono@uth.tmc.edu
+        confirmed: true
+    tissue_id: bone_marrow
+    default_assay: scRNA-seq            # confirm — readily dissociated
+    status: draft-starter
+    disease_conditions: [Control, Disease]   # e.g. MDS / AML / myeloma — edit to cohort
+    min_cells_per_subtype: 20
+    cell_ontology:
+      HSPC:
+        HSC-MPP: [CD34, AVP]
+      Erythroid:
+        Erythroid: [GYPA, HBB]
+      Myeloid:
+        Granulocyte-progenitor: [MPO, ELANE]
+        Monocyte:               [LYZ, CD14]
+      Lymphoid:
+        T-cell: [CD3E]
+        B-cell: [MS4A1, CD79A]
+        NK:     [NKG7, GNLY]
+      Megakaryocyte:
+        Megakaryocyte: [PPBP, PF4]
+      Stroma:
+        MSC-CAR: [LEPR, CXCL12]
+    notes: >
+      Hematopoietic + stromal niche. Decide granularity of the hematopoietic
+      hierarchy (progenitor vs mature) and whether adipocytes are included.
+
+  bone:
+    champion:
+      - name: Marc N. Wein
+        affiliation: Massachusetts General Hospital / Harvard
+        email: MNWEIN@mgh.harvard.edu
+        confirmed: true
+      - name: Sze Kwong "Byron" Chan
+        affiliation: Massachusetts General Hospital / Harvard
+        email: skchan@mgh.harvard.edu
+        confirmed: true
+    tissue_id: bone
+    default_assay: snRNA-seq            # confirm — mineralized tissue
+    status: draft-starter
+    disease_conditions: [Control, Osteoporosis]
+    min_cells_per_subtype: 20
+    cell_ontology:
+      Osteoblast:
+        Osteoblast: [SP7, BGLAP, COL1A1]
+      Osteocyte:
+        Osteocyte: [SOST, DMP1, MEPE]
+      Osteoclast:
+        Osteoclast: [CTSK, ACP5, MMP9]
+      Skeletal-stem:
+        MSC-SSC: [LEPR, GREM1]
+      Chondrocyte:
+        Growth-plate-chondrocyte: [COL2A1, ACAN]
+      Vascular:
+        Endothelial: [PECAM1, EMCN]
+    notes: >
+      Coordinate the bone-cartilage interface with the cartilage champion, and
+      the marrow-resident populations with the bone_marrow champion, so shared
+      cells are assigned to exactly one tissue block.
+
+  ivd:
+    champion:
+      - name: Dmitriy Sheyn
+        affiliation: Cedars-Sinai Medical Center
+        email: Dmitriy.Sheyn@csmc.edu
+        confirmed: true
+    tissue_id: ivd                      # intervertebral disc
+    default_assay: snRNA-seq            # confirm — dense proteoglycan matrix
+    status: draft-starter
+    disease_conditions: [Control, Degeneration]
+    min_cells_per_subtype: 20
+    cell_ontology:
+      Nucleus-pulposus:
+        NP-cell: [KRT8, KRT19, ACAN]
+        Notochordal: [TBXT, KRT18]      # TBXT = brachyury; mainly juvenile
+      Annulus-fibrosus:
+        AF-cell: [COL1A1, COL3A1, SFRP2]
+      Cartilage-endplate:
+        CEP-chondrocyte: [COL2A1, ACAN]
+      Immune:
+        Macrophage: [CD68]
+    notes: >
+      Confirm the three anatomical compartments (NP / AF / cartilage endplate)
+      and how notochordal cells are treated across donor ages.
+
+  synovium:
+    champion:
+      - name: Kevin Wei
+        affiliation: Brigham and Women's Hospital
+        email: kwei@bwh.harvard.edu
+        confirmed: true
+    tissue_id: synovium
+    default_assay: scRNA-seq            # confirm — readily dissociated
+    status: draft-starter
+    disease_conditions: [Control, RheumatoidArthritis, Osteoarthritis]
+    min_cells_per_subtype: 20
+    cell_ontology:
+      Fibroblast:
+        Fibroblast-lining:    [PRG4, CD55]
+        Fibroblast-sublining: [THY1, DKK3]
+      Macrophage:
+        Macrophage-lining:    [TREM2, CX3CR1]
+        Macrophage-sublining: [MERTK, LYVE1]
+      Vascular:
+        Endothelial: [PECAM1, VWF]
+        Pericyte:    [PDGFRB, NOTCH3]
+      Lymphocyte:
+        T-cell:        [CD3E]
+        B-Plasma:      [MS4A1, MZB1]
+    notes: >
+      Lining vs sublining distinction is central. In inflammatory disease expect
+      expanded immune compartments; align labels with the AMP/RA synovium atlas.
+
+  skeletal_muscle:
+    champion:
+      - name: Carla Cohen
+        affiliation: University of Oxford (MRC WIMM)
+        email: carla.cohen@imm.ox.ac.uk
+        confirmed: false               # not yet marked confirmed
+    tissue_id: skeletal_muscle
+    default_assay: snRNA-seq
+    status: example                     # fully worked reference; matches the toy dataset
+    disease_conditions: [Control, Sarcopenia]
+    min_cells_per_subtype: 20
+    cell_ontology:
+      Myonucleus:
+        Myonucleus-Type-I:  [MYH7, TNNT1]
+        Myonucleus-Type-II: [MYH2, MYH1, TNNT3]
+        Myonucleus-NMJ:     [CHRNE, COLQ]
+      Satellite:
+        Satellite-Quiescent: [PAX7, SPRY1]
+        Satellite-Activated: [MYF5, MYOD1]
+      FAP:
+        FAP-1: [PDGFRA, DCN]
+        FAP-2: [PDGFRA, OSR1]
+      Endothelial:
+        Endothelial-Capillary: [PECAM1, CD36]
+        Endothelial-Venous:    [PECAM1, ACKR1]
+      Mural:
+        Pericyte: [PDGFRB, RGS5]
+        SMC:      [ACTA2, MYH11]
+      Immune:
+        Macrophage: [MRC1, CD163]
+        Tcell:      [CD3E, CD8A]
+      Tenocyte:
+        Tenocyte: [SCX, TNMD]
+    notes: >
+      Multinucleated fibres make snRNA-seq the norm. Myonuclei dominate; capture
+      enough cells to recover rare NMJ/MTJ and activated satellite populations.
