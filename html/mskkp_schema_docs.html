@@ -198,6 +198,11 @@ table.crit td:nth-child(3) code{background:transparent;border:none;padding:0;col
 .t2-name{font-family:var(--mono);font-size:13px;color:var(--ink);font-weight:500;min-width:180px}
 .mks{display:flex;flex-wrap:wrap}
 
+/* load state */
+#load-error{margin:16px 22px}
+#load-error code{white-space:nowrap}
+.skel{color:var(--faint);font-family:var(--mono);font-size:12.5px}
+
 @media(max-width:1180px){
   .wrap{grid-template-columns:250px minmax(0,1fr)}
   .toc{display:none}
@@ -216,12 +221,21 @@ table.crit td:nth-child(3) code{background:transparent;border:none;padding:0;col
 }
 </style></head>
 <body>
+<div id="load-error" class="note warn" style="display:none">
+  <strong>Couldn't load the schema.</strong> This page renders live from
+  <code>../schemas/mskkp_rnaseq_schema.yaml</code>, <code>tissue_profiles.yaml</code>, and
+  <code>champion_criteria.yaml</code>. If you opened this file directly (<code>file://</code>),
+  browsers block local <code>fetch()</code> calls &mdash; serve the repo over HTTP instead, e.g.
+  <code>python3 -m http.server</code> from the repo root, then open
+  <code>http://localhost:8000/html/mskkp_schema_docs.html</code>.
+  <div id="load-error-detail" class="muted" style="margin-top:6px;font-family:var(--mono);font-size:12px"></div>
+</div>
 <header class="top">
   <button class="menu-btn" id="menu" aria-label="Menu">&#9776;</button>
   <div class="brand"><span class="glyph">MSKKP</span> RNA-seq gold-standard
-    <small>v0.1.0-draft</small></div>
+    <small id="hdr-version">v&hellip;</small></div>
   <div class="spacer"></div>
-  <span class="tlink">7 musculoskeletal tissues</span>
+  <span class="tlink" id="hdr-tissue-count">&hellip;</span>
 </header>
 <div class="wrap">
   <nav class="side" id="side"><div class="side-inner">
@@ -247,33 +261,28 @@ table.crit td:nth-child(3) code{background:transparent;border:none;padding:0;col
 <a class="nav-link" href="#champion-criteria" data-t="champion-criteria">Champion criteria</a>
 </div>
 <div class="nav-group"><div class="nav-eyebrow">Tissue profiles</div>
-<a class="nav-link" href="#tissue-overview" data-t="tissue-overview">Overview & roster</a>
-<a class="nav-link" href="#tissue-cartilage" data-t="tissue-cartilage">Cartilage</a>
-<a class="nav-link" href="#tissue-tendon" data-t="tissue-tendon">Tendon</a>
-<a class="nav-link" href="#tissue-bone_marrow" data-t="tissue-bone_marrow">Bone marrow</a>
-<a class="nav-link" href="#tissue-bone" data-t="tissue-bone">Bone</a>
-<a class="nav-link" href="#tissue-ivd" data-t="tissue-ivd">IVD</a>
-<a class="nav-link" href="#tissue-synovium" data-t="tissue-synovium">Synovium</a>
-<a class="nav-link" href="#tissue-skeletal_muscle" data-t="tissue-skeletal_muscle">Skeletal muscle</a>
+<div id="nav-tissue-links"><a class="nav-link skel" href="#tissue-overview">Loading&hellip;</a></div>
 </div>
 </div></nav>
   <main class="main">
 <section id="overview">
-  <div class="eyebrow">Specification &middot; v0.1.0-draft</div>
-  <h1>mskkp-rnaseq-gold-standard</h1>
-  <p class="lede">Standard for single-cell / single-nucleus RNA-seq reference datasets across musculoskeletal tissue types. Defines object layout, required metadata, and the quality thresholds that qualify a dataset as a tissue &quot;champion&quot;.</p>
+  <div class="eyebrow" id="overview-eyebrow">Specification</div>
+  <h1 id="overview-title">&hellip;</h1>
+  <p class="lede" id="overview-lede">Loading schema&hellip;</p>
   <div class="meta-row">
-    <span class="meta-item"><span class="ml">Status</span><span class="sbadge draft">draft</span></span>
-    <span class="meta-item"><span class="ml">Applies to</span><code>musculoskeletal tissues (7 champions)</code></span>
+    <span class="meta-item"><span class="ml">Status</span><span class="sbadge draft" id="overview-status">&hellip;</span></span>
+    <span class="meta-item"><span class="ml">Applies to</span><code id="overview-applies-to">&hellip;</code></span>
   </div>
-  <p class="muted">Maintained by Jeremy Arbesfeld (Knowledge Portal Network) <span class="muted">(initiative lead)</span> &middot; Luca Tucciarone (Gaulton Lab) <span class="muted">(schema author)</span>.</p>
+  <p class="muted" id="overview-maintainers"></p>
 
   <div class="callout">
     <h4>How to read this spec</h4>
     <p>A conforming dataset is a single serialized object (an AnnData <code>.h5ad</code> or a
     Seurat <code>.rds</code>) that carries an expression matrix plus structured metadata about
     every cell, gene, and donor. Each section below documents one part of that object and marks
-    every field as <span class="badge req">Required</span> <span class="badge rec">Recommended</span> or <span class="badge opt">Optional</span>.</p>
+    every field as <span class="badge req">Required</span> or <span class="badge opt">Optional</span>.
+    All of it is rendered live from the LinkML schema and companion data files in
+    <code>schemas/</code> &mdash; edit those, not this page.</p>
   </div>
 
   <h2>Two tiers of conformance</h2>
@@ -299,15 +308,10 @@ table.crit td:nth-child(3) code{background:transparent;border:none;padding:0;col
   <h2>Data object &mdash; formats &amp; matrices</h2>
   <p>A dataset is delivered as <strong>one</strong> serialized object. Two formats are accepted so
   neither Python nor R users need to change toolkits.</p>
-  <div class="formats">
-    <div class="fmt"><code>.h5ad</code><span>AnnData &middot; Python</span><em>preferred</em></div>
-    <div class="fmt"><code>.rds</code><span>Seurat &middot; R</span><em>accepted equivalent</em></div>
-  </div>
+  <div class="formats" id="object-formats"><span class="skel">Loading&hellip;</span></div>
   <h3>Expression matrices</h3>
-  <table class="fields"><thead><tr><th>Field</th><th>Requirement</th><th>Type</th><th>Description</th></tr></thead><tbody>
-<tr><td><code class="fld">raw_counts</code></td><td><span class="badge req">Required</span></td><td><span class="typ">integer</span></td><td>Unnormalized integer UMI counts.<div class="extra">Location &mdash; h5ad: <code>adata.layers["counts"]</code> &middot; Seurat: <code>obj[["RNA"]]@counts</code></div></td></tr>
-<tr><td><code class="fld">normalized</code></td><td><span class="badge req">Required</span></td><td><span class="typ">float</span></td><td>Log-normalized expression (Seurat &ldquo;data&rdquo; slot equivalent). Default method <code>LogNormalize</code>, scale factor <code>10000</code>.<div class="extra">Location &mdash; h5ad: <code>adata.X</code> &middot; Seurat: <code>obj[["RNA"]]@data</code></div></td></tr>
-</tbody></table>
+  <table class="fields"><thead><tr><th>Field</th><th>Requirement</th><th>Type</th><th>Description</th></tr></thead>
+  <tbody id="object-matrix-table-body"><tr><td colspan="4" class="skel">Loading&hellip;</td></tr></tbody></table>
   <div class="note">If raw counts are stored in <code>adata.X</code> instead of a layer, declare that
   in <code>uns.schema.X_holds</code>. Exactly one location must hold the raw integer counts.</div>
 </section>
@@ -326,10 +330,8 @@ table.crit td:nth-child(3) code{background:transparent;border:none;padding:0;col
       <p>The specific subtype inside it, e.g.
       <span class="mk">Myonucleus-Type-I</span> <span class="mk">Macrophage</span>.</p></div>
   </div>
-  <table class="fields"><thead><tr><th>Field</th><th>Requirement</th><th>Type</th><th>Description</th></tr></thead><tbody>
-<tr><td><code class="fld">celltype</code></td><td><span class="badge req">Required</span></td><td><span class="typ">categorical</span></td><td>Level 1 &mdash; broad cell-type label (the general category).<div class="extra">Maps to Cell Ontology (CL) where possible.</div></td></tr>
-<tr><td><code class="fld">cell_subtype</code></td><td><span class="badge req">Required</span></td><td><span class="typ">categorical</span></td><td>Level 2 &mdash; specific subtype within the celltype; nests under exactly one <code>celltype</code>.<div class="extra">Maps to Cell Ontology (CL) where possible.</div></td></tr>
-</tbody></table>
+  <table class="fields"><thead><tr><th>Field</th><th>Requirement</th><th>Type</th><th>Description</th></tr></thead>
+  <tbody id="annotations-table-body"><tr><td colspan="4" class="skel">Loading&hellip;</td></tr></tbody></table>
   <p class="muted">Deeper levels (Level 3 and beyond) are allowed but not required.</p>
 </section>
 
@@ -337,23 +339,14 @@ table.crit td:nth-child(3) code{background:transparent;border:none;padding:0;col
   <h2>Donor metadata <span class="sub">obs</span></h2>
   <p>Donor-level attributes recorded per cell (and optionally summarized once per donor in
   <code>uns.donor_metadata</code>).</p>
-  <table class="fields"><thead><tr><th>Field</th><th>Requirement</th><th>Type</th><th>Description</th></tr></thead><tbody>
-<tr><td><code class="fld">donor_id</code></td><td><span class="badge req">Required</span></td><td><span class="typ">categorical</span></td><td>Stable identifier for the biological donor / sample of origin.</td></tr>
-<tr><td><code class="fld">disease_status</code></td><td><span class="badge opt">Optional</span></td><td><span class="typ">categorical</span></td><td>Clinical group; use <code>Control</code> for unaffected donors.<div class="extra">Recommended values: <code>Control</code>, <code>Disease</code> (tissue may refine).</div></td></tr>
-<tr><td><code class="fld">age</code></td><td><span class="badge opt">Optional</span></td><td><span class="typ">numeric</span></td><td>Donor age.<div class="extra">Units: years.</div></td></tr>
-<tr><td><code class="fld">sex</code></td><td><span class="badge opt">Optional</span></td><td><span class="typ">categorical</span></td><td>Donor sex.<div class="extra">Allowed: <code>M</code>, <code>F</code>, <code>unknown</code>.</div></td></tr>
-<tr><td><code class="fld">assay</code></td><td><span class="badge req">Required</span></td><td><span class="typ">categorical</span></td><td>Assay used. <strong>Drives which mitochondrial threshold applies</strong> in the champion criteria.<div class="extra">Allowed: <code>scRNA-seq</code>, <code>snRNA-seq</code>.</div></td></tr>
-<tr><td><code class="fld">anatomical_site</code></td><td><span class="badge opt">Optional</span></td><td><span class="typ">categorical</span></td><td>Sampling site within the tissue.<div class="extra">Tissue-specific vocabulary.</div></td></tr>
-</tbody></table>
+  <table class="fields"><thead><tr><th>Field</th><th>Requirement</th><th>Type</th><th>Description</th></tr></thead>
+  <tbody id="donor-table-body"><tr><td colspan="4" class="skel">Loading&hellip;</td></tr></tbody></table>
 </section>
 
 <section id="qc">
   <h2>QC metrics <span class="sub">obs</span></h2>
-  <table class="fields"><thead><tr><th>Field</th><th>Requirement</th><th>Type</th><th>Description</th></tr></thead><tbody>
-<tr><td><code class="fld">nCount_RNA</code></td><td><span class="badge req">Required</span></td><td><span class="typ">integer</span></td><td>Total UMIs per cell.</td></tr>
-<tr><td><code class="fld">nFeature_RNA</code></td><td><span class="badge req">Required</span></td><td><span class="typ">integer</span></td><td>Number of genes detected per cell.</td></tr>
-<tr><td><code class="fld">percent.mt</code></td><td><span class="badge opt">Optional</span></td><td><span class="typ">float</span></td><td>Percentage of counts from mitochondrial genes.<div class="extra">Units: percent. Computable from the matrix if absent.</div></td></tr>
-</tbody></table>
+  <table class="fields"><thead><tr><th>Field</th><th>Requirement</th><th>Type</th><th>Description</th></tr></thead>
+  <tbody id="qc-table-body"><tr><td colspan="4" class="skel">Loading&hellip;</td></tr></tbody></table>
 </section>
 
 <section id="var">
@@ -361,21 +354,15 @@ table.crit td:nth-child(3) code{background:transparent;border:none;padding:0;col
   <p>Genes are keyed by a <strong>stable identifier</strong>, not by symbol. The readable English
   symbol travels alongside. Use <code>gene_id</code> as the canonical key everywhere it matters
   &mdash; matching genes and merging datasets across tissues.</p>
-  <table class="fields"><thead><tr><th>Field</th><th>Requirement</th><th>Type</th><th>Description</th></tr></thead><tbody>
-<tr><td><code class="fld">gene_id</code></td><td><span class="badge req">Required</span></td><td><span class="typ">string &amp;middot; key</span></td><td>Stable gene identifier used as the gene key &mdash; an HGNC ID (e.g. <code>HGNC:7577</code>) or an Ensembl gene ID (e.g. <code>ENSG00000092054</code>).<div class="extra">Record which system in <code>uns.schema.gene_id_system</code>.</div></td></tr>
-<tr><td><code class="fld">gene_symbol</code></td><td><span class="badge req">Required</span></td><td><span class="typ">string</span></td><td>Human-readable English symbol for the <code>gene_id</code> (e.g. <code>MYH7</code>). For readability only.</td></tr>
-<tr><td><code class="fld">mt</code></td><td><span class="badge opt">Optional</span></td><td><span class="typ">boolean</span></td><td>Flags mitochondrial genes (used to compute <code>percent.mt</code>).</td></tr>
-<tr><td><code class="fld">highly_variable</code></td><td><span class="badge opt">Optional</span></td><td><span class="typ">boolean</span></td><td>Highly variable genes, if computed.</td></tr>
-</tbody></table>
+  <table class="fields"><thead><tr><th>Field</th><th>Requirement</th><th>Type</th><th>Description</th></tr></thead>
+  <tbody id="var-table-body"><tr><td colspan="4" class="skel">Loading&hellip;</td></tr></tbody></table>
 </section>
 
 <section id="uns">
   <h2>Dataset info <span class="sub">uns</span></h2>
   <p>Dataset-level provenance describing which conventions this object follows.</p>
-  <table class="fields"><thead><tr><th>Field</th><th>Requirement</th><th>Type</th><th>Description</th></tr></thead><tbody>
-<tr><td><code class="fld">schema</code></td><td><span class="badge req">Required</span></td><td><span class="typ">block</span></td><td>Provenance block naming this standard and any deviations.<div class="extra">Fields: <code>standard</code>, <code>version</code>, <code>tissue</code>, <code>gene_id_system</code> (<code>hgnc</code> | <code>ensembl</code>), <code>X_holds</code> (<code>normalized</code> | <code>raw</code>).</div></td></tr>
-<tr><td><code class="fld">donor_metadata</code></td><td><span class="badge opt">Optional</span></td><td><span class="typ">table</span></td><td>Donor-indexed summary table (one row per donor_id).</td></tr>
-</tbody></table>
+  <table class="fields"><thead><tr><th>Field</th><th>Requirement</th><th>Type</th><th>Description</th></tr></thead>
+  <tbody id="uns-table-body"><tr><td colspan="4" class="skel">Loading&hellip;</td></tr></tbody></table>
   <h3>What a filled-in block looks like</h3>
   <p>The table above lists the <em>menu</em> of choices; a real dataset fills in one value per
   field. The two &ldquo;pick one&rdquo; fields do the real work later &mdash;
@@ -386,30 +373,34 @@ table.crit td:nth-child(3) code{background:transparent;border:none;padding:0;col
 <span class="k">version:</span>        <span class="v">0.1.0-draft</span>
 <span class="k">tissue:</span>         <span class="v">skeletal_muscle</span>
 <span class="k">gene_id_system:</span> <span class="v">ensembl</span>  <span class="c"># one of  hgnc | ensembl  — this set keys genes by Ensembl IDs</span>
-<span class="k">X_holds:</span>        <span class="v">normalized</span>  <span class="c"># one of  normalized | raw  — what adata.X contains</span></pre></div>
+<span class="k">X_holds:</span>        <span class="v">normalized</span>  <span class="c"># one of  normalized | raw  — what adata.X contains</span>
+<span class="k">certification:</span>  <span class="v">[ai_generated, human_reviewed]</span>  <span class="c"># AI-drafted annotations, later confirmed by a human</span></pre></div>
   <div class="code-label">The same block set in Python / AnnData</div><div class="codeblock"><pre>adata.uns[<span class="v">"schema"</span>] = {
     <span class="k">"standard"</span>:       <span class="v">"mskkp-rnaseq-gold-standard"</span>,
     <span class="k">"version"</span>:        <span class="v">"0.1.0-draft"</span>,
     <span class="k">"tissue"</span>:         <span class="v">"skeletal_muscle"</span>,
     <span class="k">"gene_id_system"</span>: <span class="v">"ensembl"</span>,
     <span class="k">"X_holds"</span>:        <span class="v">"normalized"</span>,
+    <span class="k">"certification"</span>: <span class="v">["ai_generated", "human_reviewed"]</span>,
 }  <span class="c"># Seurat equivalent: obj@misc$schema</span></pre></div>
 </section>
 
 <section id="required-structure">
   <h2>Required structure <span class="tier-pill">Tier 1</span></h2>
-  <p>The minimum for a dataset to be <strong>valid</strong> against the standard. All must hold.</p>
-  <ul class="checklist">
-    <li>object.formats is one of [h5ad, rds]</li><li>object.matrices.raw_counts present</li><li>object.matrices.normalized present</li><li>obs.annotations has both celltype (broad) and cell_subtype (specific) present</li><li>obs.donor.donor_id present</li><li>obs.donor.assay present</li><li>obs.qc_metrics.nCount_RNA present</li><li>obs.qc_metrics.nFeature_RNA present</li><li>uns.schema present</li>
-  </ul>
+  <p>The minimum for a dataset to be <strong>valid</strong> against the standard. All must hold.
+  Derived from every <code>required: true</code> slot in the LinkML schema.</p>
+  <ul class="checklist" id="required-structure-list"><li class="skel">Loading&hellip;</li></ul>
 </section>
 
 <section id="champion-criteria">
   <h2>Champion criteria <span class="tier-pill">Tier 2</span></h2>
   <p>The extra bar to qualify as a tissue&rsquo;s reference dataset. Every
   <span class="badge req">Required</span> rule must pass; <span class="badge rec">Recommended</span> rules are reported but do not block.
-  Note the two mitochondrial rules are gated by the <code>assay</code> field.</p>
-  <table class="fields crit"><thead><tr><th>Rule</th><th>What it checks</th><th>Test</th><th>Applies when</th><th>Severity</th></tr></thead><tbody><tr><td><code class="fld">min_counts</code></td><td>Every cell has more than 500 total counts.</td><td><code>min(obs.nCount_RNA) &gt; 500</code></td><td>&mdash;</td><td><span class="badge req">Required</span></td></tr><tr><td><code class="fld">max_mito_snRNA</code></td><td>Mitochondrial fraction under 3% for single-nucleus assays.</td><td><code>max(obs.percent.mt) &lt; 3%</code></td><td><code>obs.assay == &quot;snRNA-seq&quot;</code></td><td><span class="badge req">Required</span></td></tr><tr><td><code class="fld">max_mito_scRNA</code></td><td>Mitochondrial fraction under 15% for single-cell assays.</td><td><code>max(obs.percent.mt) &lt; 15%</code></td><td><code>obs.assay == &quot;scRNA-seq&quot;</code></td><td><span class="badge req">Required</span></td></tr><tr><td><code class="fld">annotation_depth</code></td><td>Both label layers are present — a broad celltype AND a specific cell_subtype (not just one of them).</td><td><code>obs.annotations.levels &gt;= 2</code></td><td>&mdash;</td><td><span class="badge req">Required</span></td></tr><tr><td><code class="fld">clusters_well_defined</code></td><td>Each subtype nests under exactly one celltype and is represented by a reasonable number of cells (proxy for &quot;clearly defined clusters&quot;).</td><td>&bull; every cell_subtype maps to exactly one celltype<br>&bull; min cells per cell_subtype &gt;= 20</td><td>&mdash;</td><td><span class="badge req">Required</span></td></tr><tr><td><code class="fld">donor_count</code></td><td>At least 10 donors.</td><td><code>unique(obs.donor_id) &gt;= 10</code></td><td>&mdash;</td><td><span class="badge req">Required</span></td></tr><tr><td><code class="fld">control_and_disease</code></td><td>Includes Control and, where available, disease donors.</td><td><code>contains &quot;Control&quot; and &gt;= 2 distinct values</code></td><td>&mdash;</td><td><span class="badge rec">Recommended</span></td></tr><tr><td><code class="fld">cell_count</code></td><td>At least 50,000 cells.</td><td><code>count(cells) &gt;= 50000</code></td><td>&mdash;</td><td><span class="badge req">Required</span></td></tr></tbody></table>
+  Note the two mitochondrial rules are gated by the <code>assay</code> field. These are aggregate
+  checks over obs that LinkML itself can't express &mdash; see
+  <code>schemas/validate_champion_criteria.py</code> for the runnable checker.</p>
+  <table class="fields crit"><thead><tr><th>Rule</th><th>What it checks</th><th>Test</th><th>Applies when</th><th>Severity</th></tr></thead>
+  <tbody id="champion-criteria-body"><tr><td colspan="5" class="skel">Loading&hellip;</td></tr></tbody></table>
 </section>
 
 <section id="tissue-overview">
@@ -425,242 +416,12 @@ table.crit td:nth-child(3) code{background:transparent;border:none;padding:0;col
     and markers) &mdash; and set the block status to <em>confirmed</em>. Seeded markers are shown by
     symbol and must be recorded as <code>gene_id</code>s in the delivered data.
   </div>
-  <table class="roster"><thead><tr><th>Tissue</th><th>Champion(s)</th><th>Contact</th><th>Assay</th><th>Block status</th><th>Confirmed</th></tr></thead><tbody><tr><td><a href="#tissue-cartilage"><strong>Cartilage</strong></a></td><td>Hironori Hojo</td><td><a href="mailto:hojo.hironori.dent@osaka-u.ac.jp">hojo.hironori.dent@osaka-u.ac.jp</a></td><td><code>snRNA-seq</code></td><td><span class="sbadge draft">Draft &middot; starter</span></td><td><span class="ok">&#10003;</span></td></tr><tr><td><a href="#tissue-tendon"><strong>Tendon</strong></a></td><td>Sarah Snelling<br>Anne Nichols</td><td><a href="mailto:sarah.snelling@ndorms.ox.ac.uk">sarah.snelling@ndorms.ox.ac.uk</a><br><a href="mailto:Anne_Nichols@urmc.rochester.edu">Anne_Nichols@urmc.rochester.edu</a></td><td><code>snRNA-seq</code></td><td><span class="sbadge draft">Draft &middot; starter</span></td><td><span class="ok">&#10003;</span></td></tr><tr><td><a href="#tissue-bone_marrow"><strong>Bone marrow</strong></a></td><td>Noriaki Ono</td><td><a href="mailto:Noriaki.Ono@uth.tmc.edu">Noriaki.Ono@uth.tmc.edu</a></td><td><code>scRNA-seq</code></td><td><span class="sbadge draft">Draft &middot; starter</span></td><td><span class="ok">&#10003;</span></td></tr><tr><td><a href="#tissue-bone"><strong>Bone</strong></a></td><td>Marc N. Wein<br>Sze Kwong &quot;Byron&quot; Chan</td><td><a href="mailto:MNWEIN@mgh.harvard.edu">MNWEIN@mgh.harvard.edu</a><br><a href="mailto:skchan@mgh.harvard.edu">skchan@mgh.harvard.edu</a></td><td><code>snRNA-seq</code></td><td><span class="sbadge draft">Draft &middot; starter</span></td><td><span class="ok">&#10003;</span></td></tr><tr><td><a href="#tissue-ivd"><strong>IVD</strong></a></td><td>Dmitriy Sheyn</td><td><a href="mailto:Dmitriy.Sheyn@csmc.edu">Dmitriy.Sheyn@csmc.edu</a></td><td><code>snRNA-seq</code></td><td><span class="sbadge draft">Draft &middot; starter</span></td><td><span class="ok">&#10003;</span></td></tr><tr><td><a href="#tissue-synovium"><strong>Synovium</strong></a></td><td>Kevin Wei</td><td><a href="mailto:kwei@bwh.harvard.edu">kwei@bwh.harvard.edu</a></td><td><code>scRNA-seq</code></td><td><span class="sbadge draft">Draft &middot; starter</span></td><td><span class="ok">&#10003;</span></td></tr><tr><td><a href="#tissue-skeletal_muscle"><strong>Skeletal muscle</strong></a></td><td>Carla Cohen</td><td><a href="mailto:carla.cohen@imm.ox.ac.uk">carla.cohen@imm.ox.ac.uk</a></td><td><code>snRNA-seq</code></td><td><span class="sbadge example">Worked example</span></td><td><span class="pending">partial</span></td></tr></tbody></table>
+  <table class="roster"><thead><tr><th>Tissue</th><th>Champion(s)</th><th>Contact</th><th>Assay</th><th>Block status</th><th>Confirmed</th></tr></thead>
+  <tbody id="tissue-roster-body"><tr><td colspan="6" class="skel">Loading&hellip;</td></tr></tbody></table>
 </section>
 
+<div id="tissue-sections"></div>
 
-<section id="tissue-cartilage">
-  <h2>Cartilage</h2>
-  <div class="meta-row"><span class="meta-item"><span class="ml">Assay</span><code>snRNA-seq</code></span><span class="meta-item"><span class="ml">Block status</span><span class="sbadge draft">Draft &middot; starter</span></span><span class="meta-item"><span class="ml">Min cells / subtype</span><code>20</code></span></div><div class="meta-row"><span class="meta-item"><span class="ml">Disease conditions</span><span class="cond">Control</span> <span class="cond">Osteoarthritis</span></span></div>
-  <table class="roster mini"><thead><tr><th>Champion</th><th>Affiliation</th><th>Contact</th><th>Role status</th></tr></thead><tbody><tr><td>Hironori Hojo</td><td>Osaka University</td><td><a href="mailto:hojo.hironori.dent@osaka-u.ac.jp">hojo.hironori.dent@osaka-u.ac.jp</a></td><td><span class="ok">&#10003; confirmed</span></td></tr></tbody></table>
-  <div class="note tissue-note"><strong>Champion note.</strong> Articular cartilage. Consider zonal (superficial/mid/deep) structure and OA-associated states. Confirm whether osteochondral / bone-interface cells belong here or in the bone block to avoid double-counting.</div>
-  <h3>Cell ontology <span class="count">3 broad &middot; 5 subtypes</span></h3>
-  <p class="muted">Two-level labels for this tissue. Marker genes are shown by symbol for
-  readability; in the delivered data they are keyed by <code>gene_id</code>.</p>
-  <div class="tree">
-<div class="t1"><span class="t1-name">Chondrocyte</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Chondrocyte-Superficial</span><span class="mks"><span class="mk">PRG4</span> <span class="mk">CILP</span></span></div>
-<div class="t2"><span class="t2-name">Chondrocyte-Homeostatic</span><span class="mks"><span class="mk">COL2A1</span> <span class="mk">ACAN</span> <span class="mk">SOX9</span></span></div>
-<div class="t2"><span class="t2-name">Chondrocyte-Hypertrophic</span><span class="mks"><span class="mk">COL10A1</span> <span class="mk">IBSP</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Fibrochondrocyte</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Fibrochondrocyte</span><span class="mks"><span class="mk">COL1A1</span> <span class="mk">COL3A1</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Progenitor</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Chondroprogenitor</span><span class="mks"><span class="mk">GDF5</span> <span class="mk">CD34</span></span></div>
-</div>
-</div>
-</section>
-<section id="tissue-tendon">
-  <h2>Tendon</h2>
-  <div class="meta-row"><span class="meta-item"><span class="ml">Assay</span><code>snRNA-seq</code></span><span class="meta-item"><span class="ml">Block status</span><span class="sbadge draft">Draft &middot; starter</span></span><span class="meta-item"><span class="ml">Min cells / subtype</span><code>20</code></span></div><div class="meta-row"><span class="meta-item"><span class="ml">Disease conditions</span><span class="cond">Control</span> <span class="cond">Tendinopathy</span></span></div>
-  <table class="roster mini"><thead><tr><th>Champion</th><th>Affiliation</th><th>Contact</th><th>Role status</th></tr></thead><tbody><tr><td>Sarah Snelling</td><td>University of Oxford (NDORMS)</td><td><a href="mailto:sarah.snelling@ndorms.ox.ac.uk">sarah.snelling@ndorms.ox.ac.uk</a></td><td><span class="ok">&#10003; confirmed</span></td></tr><tr><td>Anne Nichols</td><td>University of Rochester Medical Center</td><td><a href="mailto:Anne_Nichols@urmc.rochester.edu">Anne_Nichols@urmc.rochester.edu</a></td><td><span class="ok">&#10003; confirmed</span></td></tr></tbody></table>
-  <div class="note tissue-note"><strong>Champion note.</strong> Confirm enthesis (bone-tendon junction) handling and whether to separate mid-substance from peritenon populations.</div>
-  <h3>Cell ontology <span class="count">4 broad &middot; 6 subtypes</span></h3>
-  <p class="muted">Two-level labels for this tissue. Marker genes are shown by symbol for
-  readability; in the delivered data they are keyed by <code>gene_id</code>.</p>
-  <div class="tree">
-<div class="t1"><span class="t1-name">Tenocyte</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Tenocyte</span><span class="mks"><span class="mk">SCX</span> <span class="mk">MKX</span> <span class="mk">TNMD</span></span></div>
-<div class="t2"><span class="t2-name">Tenocyte-Fibro</span><span class="mks"><span class="mk">COL1A1</span> <span class="mk">COL3A1</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Progenitor</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Tendon-stem-progenitor</span><span class="mks"><span class="mk">PDGFRA</span> <span class="mk">THY1</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Vascular</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Endothelial</span><span class="mks"><span class="mk">PECAM1</span> <span class="mk">VWF</span></span></div>
-<div class="t2"><span class="t2-name">Pericyte</span><span class="mks"><span class="mk">PDGFRB</span> <span class="mk">RGS5</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Immune</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Macrophage</span><span class="mks"><span class="mk">CD68</span> <span class="mk">MRC1</span></span></div>
-</div>
-</div>
-</section>
-<section id="tissue-bone_marrow">
-  <h2>Bone marrow</h2>
-  <div class="meta-row"><span class="meta-item"><span class="ml">Assay</span><code>scRNA-seq</code></span><span class="meta-item"><span class="ml">Block status</span><span class="sbadge draft">Draft &middot; starter</span></span><span class="meta-item"><span class="ml">Min cells / subtype</span><code>20</code></span></div><div class="meta-row"><span class="meta-item"><span class="ml">Disease conditions</span><span class="cond">Control</span> <span class="cond">Disease</span></span></div>
-  <table class="roster mini"><thead><tr><th>Champion</th><th>Affiliation</th><th>Contact</th><th>Role status</th></tr></thead><tbody><tr><td>Noriaki Ono</td><td>UTHealth Houston</td><td><a href="mailto:Noriaki.Ono@uth.tmc.edu">Noriaki.Ono@uth.tmc.edu</a></td><td><span class="ok">&#10003; confirmed</span></td></tr></tbody></table>
-  <div class="note tissue-note"><strong>Champion note.</strong> Hematopoietic + stromal niche. Decide granularity of the hematopoietic hierarchy (progenitor vs mature) and whether adipocytes are included.</div>
-  <h3>Cell ontology <span class="count">6 broad &middot; 9 subtypes</span></h3>
-  <p class="muted">Two-level labels for this tissue. Marker genes are shown by symbol for
-  readability; in the delivered data they are keyed by <code>gene_id</code>.</p>
-  <div class="tree">
-<div class="t1"><span class="t1-name">HSPC</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">HSC-MPP</span><span class="mks"><span class="mk">CD34</span> <span class="mk">AVP</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Erythroid</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Erythroid</span><span class="mks"><span class="mk">GYPA</span> <span class="mk">HBB</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Myeloid</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Granulocyte-progenitor</span><span class="mks"><span class="mk">MPO</span> <span class="mk">ELANE</span></span></div>
-<div class="t2"><span class="t2-name">Monocyte</span><span class="mks"><span class="mk">LYZ</span> <span class="mk">CD14</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Lymphoid</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">T-cell</span><span class="mks"><span class="mk">CD3E</span></span></div>
-<div class="t2"><span class="t2-name">B-cell</span><span class="mks"><span class="mk">MS4A1</span> <span class="mk">CD79A</span></span></div>
-<div class="t2"><span class="t2-name">NK</span><span class="mks"><span class="mk">NKG7</span> <span class="mk">GNLY</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Megakaryocyte</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Megakaryocyte</span><span class="mks"><span class="mk">PPBP</span> <span class="mk">PF4</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Stroma</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">MSC-CAR</span><span class="mks"><span class="mk">LEPR</span> <span class="mk">CXCL12</span></span></div>
-</div>
-</div>
-</section>
-<section id="tissue-bone">
-  <h2>Bone</h2>
-  <div class="meta-row"><span class="meta-item"><span class="ml">Assay</span><code>snRNA-seq</code></span><span class="meta-item"><span class="ml">Block status</span><span class="sbadge draft">Draft &middot; starter</span></span><span class="meta-item"><span class="ml">Min cells / subtype</span><code>20</code></span></div><div class="meta-row"><span class="meta-item"><span class="ml">Disease conditions</span><span class="cond">Control</span> <span class="cond">Osteoporosis</span></span></div>
-  <table class="roster mini"><thead><tr><th>Champion</th><th>Affiliation</th><th>Contact</th><th>Role status</th></tr></thead><tbody><tr><td>Marc N. Wein</td><td>Massachusetts General Hospital / Harvard</td><td><a href="mailto:MNWEIN@mgh.harvard.edu">MNWEIN@mgh.harvard.edu</a></td><td><span class="ok">&#10003; confirmed</span></td></tr><tr><td>Sze Kwong &quot;Byron&quot; Chan</td><td>Massachusetts General Hospital / Harvard</td><td><a href="mailto:skchan@mgh.harvard.edu">skchan@mgh.harvard.edu</a></td><td><span class="ok">&#10003; confirmed</span></td></tr></tbody></table>
-  <div class="note tissue-note"><strong>Champion note.</strong> Coordinate the bone-cartilage interface with the cartilage champion, and the marrow-resident populations with the bone_marrow champion, so shared cells are assigned to exactly one tissue block.</div>
-  <h3>Cell ontology <span class="count">6 broad &middot; 6 subtypes</span></h3>
-  <p class="muted">Two-level labels for this tissue. Marker genes are shown by symbol for
-  readability; in the delivered data they are keyed by <code>gene_id</code>.</p>
-  <div class="tree">
-<div class="t1"><span class="t1-name">Osteoblast</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Osteoblast</span><span class="mks"><span class="mk">SP7</span> <span class="mk">BGLAP</span> <span class="mk">COL1A1</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Osteocyte</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Osteocyte</span><span class="mks"><span class="mk">SOST</span> <span class="mk">DMP1</span> <span class="mk">MEPE</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Osteoclast</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Osteoclast</span><span class="mks"><span class="mk">CTSK</span> <span class="mk">ACP5</span> <span class="mk">MMP9</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Skeletal-stem</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">MSC-SSC</span><span class="mks"><span class="mk">LEPR</span> <span class="mk">GREM1</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Chondrocyte</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Growth-plate-chondrocyte</span><span class="mks"><span class="mk">COL2A1</span> <span class="mk">ACAN</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Vascular</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Endothelial</span><span class="mks"><span class="mk">PECAM1</span> <span class="mk">EMCN</span></span></div>
-</div>
-</div>
-</section>
-<section id="tissue-ivd">
-  <h2>IVD — intervertebral disc</h2>
-  <div class="meta-row"><span class="meta-item"><span class="ml">Assay</span><code>snRNA-seq</code></span><span class="meta-item"><span class="ml">Block status</span><span class="sbadge draft">Draft &middot; starter</span></span><span class="meta-item"><span class="ml">Min cells / subtype</span><code>20</code></span></div><div class="meta-row"><span class="meta-item"><span class="ml">Disease conditions</span><span class="cond">Control</span> <span class="cond">Degeneration</span></span></div>
-  <table class="roster mini"><thead><tr><th>Champion</th><th>Affiliation</th><th>Contact</th><th>Role status</th></tr></thead><tbody><tr><td>Dmitriy Sheyn</td><td>Cedars-Sinai Medical Center</td><td><a href="mailto:Dmitriy.Sheyn@csmc.edu">Dmitriy.Sheyn@csmc.edu</a></td><td><span class="ok">&#10003; confirmed</span></td></tr></tbody></table>
-  <div class="note tissue-note"><strong>Champion note.</strong> Confirm the three anatomical compartments (NP / AF / cartilage endplate) and how notochordal cells are treated across donor ages.</div>
-  <h3>Cell ontology <span class="count">4 broad &middot; 5 subtypes</span></h3>
-  <p class="muted">Two-level labels for this tissue. Marker genes are shown by symbol for
-  readability; in the delivered data they are keyed by <code>gene_id</code>.</p>
-  <div class="tree">
-<div class="t1"><span class="t1-name">Nucleus-pulposus</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">NP-cell</span><span class="mks"><span class="mk">KRT8</span> <span class="mk">KRT19</span> <span class="mk">ACAN</span></span></div>
-<div class="t2"><span class="t2-name">Notochordal</span><span class="mks"><span class="mk">TBXT</span> <span class="mk">KRT18</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Annulus-fibrosus</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">AF-cell</span><span class="mks"><span class="mk">COL1A1</span> <span class="mk">COL3A1</span> <span class="mk">SFRP2</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Cartilage-endplate</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">CEP-chondrocyte</span><span class="mks"><span class="mk">COL2A1</span> <span class="mk">ACAN</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Immune</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Macrophage</span><span class="mks"><span class="mk">CD68</span></span></div>
-</div>
-</div>
-</section>
-<section id="tissue-synovium">
-  <h2>Synovium</h2>
-  <div class="meta-row"><span class="meta-item"><span class="ml">Assay</span><code>scRNA-seq</code></span><span class="meta-item"><span class="ml">Block status</span><span class="sbadge draft">Draft &middot; starter</span></span><span class="meta-item"><span class="ml">Min cells / subtype</span><code>20</code></span></div><div class="meta-row"><span class="meta-item"><span class="ml">Disease conditions</span><span class="cond">Control</span> <span class="cond">RheumatoidArthritis</span> <span class="cond">Osteoarthritis</span></span></div>
-  <table class="roster mini"><thead><tr><th>Champion</th><th>Affiliation</th><th>Contact</th><th>Role status</th></tr></thead><tbody><tr><td>Kevin Wei</td><td>Brigham and Women&#x27;s Hospital</td><td><a href="mailto:kwei@bwh.harvard.edu">kwei@bwh.harvard.edu</a></td><td><span class="ok">&#10003; confirmed</span></td></tr></tbody></table>
-  <div class="note tissue-note"><strong>Champion note.</strong> Lining vs sublining distinction is central. In inflammatory disease expect expanded immune compartments; align labels with the AMP/RA synovium atlas.</div>
-  <h3>Cell ontology <span class="count">4 broad &middot; 8 subtypes</span></h3>
-  <p class="muted">Two-level labels for this tissue. Marker genes are shown by symbol for
-  readability; in the delivered data they are keyed by <code>gene_id</code>.</p>
-  <div class="tree">
-<div class="t1"><span class="t1-name">Fibroblast</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Fibroblast-lining</span><span class="mks"><span class="mk">PRG4</span> <span class="mk">CD55</span></span></div>
-<div class="t2"><span class="t2-name">Fibroblast-sublining</span><span class="mks"><span class="mk">THY1</span> <span class="mk">DKK3</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Macrophage</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Macrophage-lining</span><span class="mks"><span class="mk">TREM2</span> <span class="mk">CX3CR1</span></span></div>
-<div class="t2"><span class="t2-name">Macrophage-sublining</span><span class="mks"><span class="mk">MERTK</span> <span class="mk">LYVE1</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Vascular</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Endothelial</span><span class="mks"><span class="mk">PECAM1</span> <span class="mk">VWF</span></span></div>
-<div class="t2"><span class="t2-name">Pericyte</span><span class="mks"><span class="mk">PDGFRB</span> <span class="mk">NOTCH3</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Lymphocyte</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">T-cell</span><span class="mks"><span class="mk">CD3E</span></span></div>
-<div class="t2"><span class="t2-name">B-Plasma</span><span class="mks"><span class="mk">MS4A1</span> <span class="mk">MZB1</span></span></div>
-</div>
-</div>
-</section>
-<section id="tissue-skeletal_muscle">
-  <h2>Skeletal muscle</h2>
-  <div class="meta-row"><span class="meta-item"><span class="ml">Assay</span><code>snRNA-seq</code></span><span class="meta-item"><span class="ml">Block status</span><span class="sbadge example">Worked example</span></span><span class="meta-item"><span class="ml">Min cells / subtype</span><code>20</code></span></div><div class="meta-row"><span class="meta-item"><span class="ml">Disease conditions</span><span class="cond">Control</span> <span class="cond">Sarcopenia</span></span></div>
-  <table class="roster mini"><thead><tr><th>Champion</th><th>Affiliation</th><th>Contact</th><th>Role status</th></tr></thead><tbody><tr><td>Carla Cohen</td><td>University of Oxford (MRC WIMM)</td><td><a href="mailto:carla.cohen@imm.ox.ac.uk">carla.cohen@imm.ox.ac.uk</a></td><td><span class="pending">pending</span></td></tr></tbody></table>
-  <div class="note tissue-note"><strong>Champion note.</strong> Multinucleated fibres make snRNA-seq the norm. Myonuclei dominate; capture enough cells to recover rare NMJ/MTJ and activated satellite populations.</div>
-  <h3>Cell ontology <span class="count">7 broad &middot; 14 subtypes</span></h3>
-  <p class="muted">Two-level labels for this tissue. Marker genes are shown by symbol for
-  readability; in the delivered data they are keyed by <code>gene_id</code>.</p>
-  <div class="tree">
-<div class="t1"><span class="t1-name">Myonucleus</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Myonucleus-Type-I</span><span class="mks"><span class="mk">MYH7</span> <span class="mk">TNNT1</span></span></div>
-<div class="t2"><span class="t2-name">Myonucleus-Type-II</span><span class="mks"><span class="mk">MYH2</span> <span class="mk">MYH1</span> <span class="mk">TNNT3</span></span></div>
-<div class="t2"><span class="t2-name">Myonucleus-NMJ</span><span class="mks"><span class="mk">CHRNE</span> <span class="mk">COLQ</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Satellite</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Satellite-Quiescent</span><span class="mks"><span class="mk">PAX7</span> <span class="mk">SPRY1</span></span></div>
-<div class="t2"><span class="t2-name">Satellite-Activated</span><span class="mks"><span class="mk">MYF5</span> <span class="mk">MYOD1</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">FAP</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">FAP-1</span><span class="mks"><span class="mk">PDGFRA</span> <span class="mk">DCN</span></span></div>
-<div class="t2"><span class="t2-name">FAP-2</span><span class="mks"><span class="mk">PDGFRA</span> <span class="mk">OSR1</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Endothelial</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Endothelial-Capillary</span><span class="mks"><span class="mk">PECAM1</span> <span class="mk">CD36</span></span></div>
-<div class="t2"><span class="t2-name">Endothelial-Venous</span><span class="mks"><span class="mk">PECAM1</span> <span class="mk">ACKR1</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Mural</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Pericyte</span><span class="mks"><span class="mk">PDGFRB</span> <span class="mk">RGS5</span></span></div>
-<div class="t2"><span class="t2-name">SMC</span><span class="mks"><span class="mk">ACTA2</span> <span class="mk">MYH11</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Immune</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Macrophage</span><span class="mks"><span class="mk">MRC1</span> <span class="mk">CD163</span></span></div>
-<div class="t2"><span class="t2-name">Tcell</span><span class="mks"><span class="mk">CD3E</span> <span class="mk">CD8A</span></span></div>
-</div>
-<div class="t1"><span class="t1-name">Tenocyte</span><span class="t1-tag">Level&nbsp;1</span></div>
-<div class="t2wrap">
-<div class="t2"><span class="t2-name">Tenocyte</span><span class="mks"><span class="mk">SCX</span> <span class="mk">TNMD</span></span></div>
-</div>
-</div>
-</section>
 </main>
   <aside class="toc"><div class="toc-h">On this page</div>
 <a href="#overview">Overview</a>
@@ -672,33 +433,309 @@ table.crit td:nth-child(3) code{background:transparent;border:none;padding:0;col
 <a href="#uns">Dataset info</a>
 <a href="#required-structure">Required structure</a>
 <a href="#champion-criteria">Champion criteria</a>
-<a href="#tissue-overview">Overview & roster</a>
-<a href="#tissue-cartilage">Cartilage</a>
-<a href="#tissue-tendon">Tendon</a>
-<a href="#tissue-bone_marrow">Bone marrow</a>
-<a href="#tissue-bone">Bone</a>
-<a href="#tissue-ivd">IVD</a>
-<a href="#tissue-synovium">Synovium</a>
-<a href="#tissue-skeletal_muscle">Skeletal muscle</a>
+<div id="toc-tissue-links"><a href="#tissue-overview">Overview & roster</a></div>
 </aside>
 </div>
+<script src="vendor/js-yaml.min.js"></script>
 <script>
 const side=document.getElementById('side');
 document.getElementById('menu').addEventListener('click',()=>side.classList.toggle('open'));
 side.addEventListener('click',e=>{if(e.target.classList.contains('nav-link'))side.classList.remove('open');});
-const links=[...document.querySelectorAll('.nav-link')];
-const tocLinks=[...document.querySelectorAll('.toc a')];
-const map={};links.forEach(l=>map[l.dataset.t]=l);
-const secs=[...document.querySelectorAll('section[id]')];
-const obs=new IntersectionObserver((entries)=>{
-  entries.forEach(en=>{
-    if(en.isIntersecting){
-      const id=en.target.id;
-      links.forEach(l=>l.classList.toggle('active',l.dataset.t===id));
-      tocLinks.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+id));
-    }
+
+function initNavHighlighting(){
+  const links=[...document.querySelectorAll('.nav-link')];
+  const tocLinks=[...document.querySelectorAll('.toc a')];
+  links.forEach(l=>{l.dataset.t=l.getAttribute('href').slice(1);});
+  const secs=[...document.querySelectorAll('section[id]')];
+  const obs=new IntersectionObserver((entries)=>{
+    entries.forEach(en=>{
+      if(en.isIntersecting){
+        const id=en.target.id;
+        links.forEach(l=>l.classList.toggle('active',l.dataset.t===id));
+        tocLinks.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+id));
+      }
+    });
+  },{rootMargin:'-72px 0px -70% 0px',threshold:0});
+  secs.forEach(s=>obs.observe(s));
+}
+
+function esc(s){
+  if(s===undefined||s===null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function badge(required){
+  return required ? '<span class="badge req">Required</span>' : '<span class="badge opt">Optional</span>';
+}
+function attrsOf(schema,className){
+  return (schema.classes[className] && schema.classes[className].attributes) || {};
+}
+function parseComments(attr){
+  const map=new Map();
+  (attr.comments||[]).forEach(c=>{
+    const idx=c.indexOf(':');
+    if(idx===-1){map.set(c,'');return;}
+    map.set(c.slice(0,idx).trim(),c.slice(idx+1).trim());
   });
-},{rootMargin:'-72px 0px -70% 0px',threshold:0});
-secs.forEach(s=>obs.observe(s));
+  return map;
+}
+function defaultExtra(attr){
+  const m=parseComments(attr);
+  return [...m.entries()].map(([k,v])=>v?`${k}: ${v}`:k).join(' &middot; ');
+}
+function typeLabel(schema,attr){
+  const range=attr.range||schema.default_range||'string';
+  const enumDef=schema.enums&&schema.enums[range];
+  if(enumDef) return Object.keys(enumDef.permissible_values).join(' | ');
+  return range;
+}
+async function fetchYaml(path){
+  const res=await fetch(path);
+  if(!res.ok) throw new Error(`${path} -> HTTP ${res.status}`);
+  return jsyaml.load(await res.text());
+}
+
+function renderOverview(schema,tissueCount){
+  document.getElementById('hdr-version').textContent='v'+schema.version;
+  document.getElementById('hdr-tissue-count').textContent=`${tissueCount} musculoskeletal tissues`;
+  document.getElementById('overview-eyebrow').textContent=`Specification · v${schema.version}`;
+  document.getElementById('overview-title').textContent=schema.name;
+  document.getElementById('overview-lede').textContent=schema.description;
+  const statusEl=document.getElementById('overview-status');
+  statusEl.textContent=schema.status;
+  statusEl.className='sbadge '+(schema.status==='draft'?'draft':'done');
+  document.getElementById('overview-applies-to').textContent=`musculoskeletal tissues (${tissueCount} champions)`;
+
+  const maintainers=(schema.comments||[]).map(c=>{
+    const idx=c.indexOf(':');
+    const role=c.slice(0,idx).trim().replace(/_/g,' ');
+    const rest=c.slice(idx+1).trim();
+    return `${esc(rest)} <span class="muted">(${esc(role)})</span>`;
+  }).join(' &middot; ');
+  document.getElementById('overview-maintainers').innerHTML=maintainers?('Maintained by '+maintainers+'.'):'';
+}
+
+function renderObjectSection(schema){
+  const formatEnum=schema.enums.FileFormatEnum.permissible_values;
+  document.getElementById('object-formats').innerHTML=Object.entries(formatEnum).map(([key,pv])=>{
+    const desc=(pv&&pv.description)||'';
+    const parts=desc.split('—').map(s=>s.trim());
+    const subtitle=parts[0]||'';
+    const tag=(parts[1]||'').replace(/\.$/,'');
+    return `<div class="fmt"><code>.${esc(key)}</code><span>${esc(subtitle)}</span>${tag?`<em>${esc(tag)}</em>`:''}</div>`;
+  }).join('');
+
+  const attrs=attrsOf(schema,'ObjectSpec');
+  document.getElementById('object-matrix-table-body').innerHTML=['raw_counts','normalized'].map(name=>{
+    const a=attrs[name];
+    const extra=[...parseComments(a).entries()].map(([k,v])=>{
+      const label=k==='location_h5ad'?'h5ad':k==='location_seurat'?'Seurat':k;
+      return `${label}: <code>${esc(v)}</code>`;
+    }).join(' &middot; ');
+    return `<tr><td><code class="fld">${name}</code></td><td>${badge(a.required)}</td><td><span class="typ">${typeLabel(schema,a)}</span></td>
+      <td>${esc(a.description)}${extra?`<div class="extra">Location &mdash; ${extra}</div>`:''}</td></tr>`;
+  }).join('');
+}
+
+function renderAnnotations(schema){
+  const attrs=attrsOf(schema,'CellObservation');
+  document.getElementById('annotations-table-body').innerHTML=['celltype','cell_subtype'].map(name=>{
+    const a=attrs[name];
+    const extra=defaultExtra(a);
+    return `<tr><td><code class="fld">${name}</code></td><td>${badge(a.required)}</td><td><span class="typ">categorical</span></td>
+      <td>${esc(a.description)}${extra?`<div class="extra">${extra}</div>`:''}</td></tr>`;
+  }).join('');
+}
+
+function renderDonor(schema){
+  const attrs=attrsOf(schema,'CellObservation');
+  const order=['donor_id','disease_status','age','sex','assay','anatomical_site'];
+  document.getElementById('donor-table-body').innerHTML=order.map(name=>{
+    const a=attrs[name];
+    const extraBits=[];
+    if(name==='disease_status') extraBits.push('Recommended baseline values: <code>Control</code>, <code>Disease</code> (tissue may refine).');
+    if(name==='age'&&a.unit) extraBits.push(`Units: ${a.unit.ucum_code==='a'?'years':esc(a.unit.ucum_code)}.`);
+    if(name==='sex'||name==='assay'){
+      const vals=typeLabel(schema,a).split(' | ').map(v=>`<code>${esc(v)}</code>`).join(', ');
+      extraBits.push('Allowed: '+vals+'.'+(name==='assay'?' <strong>Drives which mitochondrial threshold applies</strong> in the champion criteria.':''));
+    }
+    const typ=(name==='sex'||name==='assay')?'categorical':(a.range||'categorical');
+    return `<tr><td><code class="fld">${name}</code></td><td>${badge(a.required)}</td><td><span class="typ">${typ}</span></td>
+      <td>${esc(a.description||'')}${extraBits.length?`<div class="extra">${extraBits.join(' ')}</div>`:''}</td></tr>`;
+  }).join('');
+}
+
+function renderQC(schema){
+  const attrs=attrsOf(schema,'CellObservation');
+  document.getElementById('qc-table-body').innerHTML=['nCount_RNA','nFeature_RNA','percent_mt'].map(name=>{
+    const a=attrs[name];
+    const extra=name==='percent_mt'?'<div class="extra">Units: percent. Computable from the matrix if absent.</div>':'';
+    const label=name==='percent_mt'?'percent.mt':name;
+    return `<tr><td><code class="fld">${label}</code></td><td>${badge(a.required)}</td><td><span class="typ">${a.range}</span></td>
+      <td>${esc(a.description)}${extra}</td></tr>`;
+  }).join('');
+}
+
+function renderVar(schema){
+  const attrs=attrsOf(schema,'GeneVariable');
+  document.getElementById('var-table-body').innerHTML=['gene_id','gene_symbol','mt','highly_variable'].map(name=>{
+    const a=attrs[name];
+    return `<tr><td><code class="fld">${name}</code></td><td>${badge(a.required)}</td><td><span class="typ">${a.range||'string'}${a.identifier?' &middot; key':''}</span></td>
+      <td>${esc(a.description)}</td></tr>`;
+  }).join('');
+}
+
+function renderUns(schema){
+  const datasetAttrs=attrsOf(schema,'Dataset');
+  const provenanceAttrs=attrsOf(schema,'DatasetProvenance');
+  const fieldBits=Object.entries(provenanceAttrs).map(([name,a])=>{
+    const enumDef=a.range&&schema.enums[a.range];
+    return enumDef?`<code>${name}</code> (${Object.keys(enumDef.permissible_values).join(' | ')})`:`<code>${name}</code>`;
+  }).join(', ');
+  document.getElementById('uns-table-body').innerHTML=`
+    <tr><td><code class="fld">schema</code></td><td>${badge(true)}</td><td><span class="typ">block</span></td>
+      <td>${esc(schema.classes.DatasetProvenance.description)}
+      <div class="extra">Fields: ${fieldBits}.</div></td></tr>
+    <tr><td><code class="fld">donor_metadata</code></td><td>${badge(false)}</td><td><span class="typ">table</span></td>
+      <td>${esc(datasetAttrs.donor_metadata.description)}</td></tr>`;
+}
+
+function renderRequiredStructure(schema){
+  const items=[];
+  items.push(`object.format is one of [${Object.keys(schema.enums.FileFormatEnum.permissible_values).join(', ')}]`);
+  Object.entries(attrsOf(schema,'ObjectSpec')).forEach(([name,a])=>{
+    if(name!=='format'&&a.required) items.push(`object.${name} present`);
+  });
+  Object.entries(attrsOf(schema,'CellObservation')).forEach(([name,a])=>{
+    if(a.required) items.push(`obs.${name} present`);
+  });
+  Object.entries(attrsOf(schema,'GeneVariable')).forEach(([name,a])=>{
+    if(a.required) items.push(`var.${name} present`);
+  });
+  items.push('uns.schema present');
+  document.getElementById('required-structure-list').innerHTML=items.map(i=>`<li>${esc(i)}</li>`).join('');
+}
+
+function renderChampionCriteria(criteria){
+  document.getElementById('champion-criteria-body').innerHTML=criteria.map(rule=>{
+    let test;
+    if(rule.aggregate){
+      const units=rule.units==='percent'?'%':'';
+      test=`<code>${esc(rule.aggregate)}(${esc(rule.field)}) ${esc(rule.operator)} ${esc(rule.threshold)}${units}</code>`;
+    }else if(rule.checks){
+      test=rule.checks.map(c=>`&bull; ${esc(c)}`).join('<br>');
+    }else if(rule.check){
+      test=`<code>${esc(rule.check)}</code>`;
+    }else{
+      test='&mdash;';
+    }
+    const when=rule.when?`<code>${esc(rule.when)}</code>`:'&mdash;';
+    const sevBadge=rule.severity==='required'?'<span class="badge req">Required</span>':'<span class="badge rec">Recommended</span>';
+    return `<tr><td><code class="fld">${esc(rule.id)}</code></td><td>${esc((rule.description||'').trim())}</td><td>${test}</td><td>${when}</td><td>${sevBadge}</td></tr>`;
+  }).join('');
+}
+
+const STATUS_LABEL={
+  'draft-starter':{cls:'draft',label:'Draft &middot; starter'},
+  confirmed:{cls:'done',label:'Confirmed'},
+  example:{cls:'example',label:'Worked example'},
+};
+const TISSUE_DISPLAY_NAME={ivd:'IVD',bone_marrow:'Bone marrow',skeletal_muscle:'Skeletal muscle'};
+function displayName(tissueId){
+  return TISSUE_DISPLAY_NAME[tissueId]||(tissueId.charAt(0).toUpperCase()+tissueId.slice(1));
+}
+function championStatus(champions){
+  const allConfirmed=champions.every(c=>c.confirmed);
+  const noneConfirmed=champions.every(c=>!c.confirmed);
+  if(allConfirmed) return '<span class="ok">&#10003;</span>';
+  if(noneConfirmed) return '<span class="pending">pending</span>';
+  return '<span class="pending">partial</span>';
+}
+
+function renderTissueNav(tissueIds){
+  document.getElementById('nav-tissue-links').innerHTML=
+    `<a class="nav-link" href="#tissue-overview">Overview &amp; roster</a>`+
+    tissueIds.map(id=>`<a class="nav-link" href="#tissue-${id}">${esc(displayName(id))}</a>`).join('');
+  document.getElementById('toc-tissue-links').innerHTML=
+    `<a href="#tissue-overview">Overview &amp; roster</a>`+
+    tissueIds.map(id=>`<a href="#tissue-${id}">${esc(displayName(id))}</a>`).join('');
+}
+
+function renderTissueRoster(profiles){
+  document.getElementById('tissue-roster-body').innerHTML=Object.values(profiles).map(p=>{
+    const names=p.champions.map(c=>esc(c.name)).join('<br>');
+    const contacts=p.champions.map(c=>`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`).join('<br>');
+    const st=STATUS_LABEL[p.status]||{cls:'draft',label:esc(p.status)};
+    return `<tr><td><a href="#tissue-${p.tissue_id}"><strong>${esc(displayName(p.tissue_id))}</strong></a></td>
+      <td>${names}</td><td>${contacts}</td><td><code>${esc(p.default_assay)}</code></td>
+      <td><span class="sbadge ${st.cls}">${st.label}</span></td><td>${championStatus(p.champions)}</td></tr>`;
+  }).join('');
+}
+
+function renderCellOntologyTree(cellOntology){
+  return cellOntology.map(ct=>{
+    const subtypes=(ct.subtypes||[]).map(st=>{
+      const markers=(st.markers||[]).map(m=>`<span class="mk">${esc(m)}</span>`).join(' ');
+      return `<div class="t2"><span class="t2-name">${esc(st.name)}</span><span class="mks">${markers}</span></div>`;
+    }).join('');
+    return `<div class="t1"><span class="t1-name">${esc(ct.name)}</span><span class="t1-tag">Level&nbsp;1</span></div><div class="t2wrap">${subtypes}</div>`;
+  }).join('');
+}
+
+function renderTissueSections(profiles){
+  document.getElementById('tissue-sections').innerHTML=Object.values(profiles).map(p=>{
+    const st=STATUS_LABEL[p.status]||{cls:'draft',label:esc(p.status)};
+    const conditions=(p.disease_conditions||[]).map(c=>`<span class="cond">${esc(c)}</span>`).join(' ');
+    const rosterRows=p.champions.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.affiliation||'')}</td>
+      <td><a href="mailto:${esc(c.email)}">${esc(c.email)}</a></td>
+      <td>${c.confirmed?'<span class="ok">&#10003; confirmed</span>':'<span class="pending">pending</span>'}</td></tr>`).join('');
+    const subtypeCount=(p.cell_ontology||[]).reduce((n,ct)=>n+(ct.subtypes||[]).length,0);
+    const heading=esc(displayName(p.tissue_id))+(p.tissue_id==='ivd'?' &mdash; intervertebral disc':'');
+    return `<section id="tissue-${p.tissue_id}">
+  <h2>${heading}</h2>
+  <div class="meta-row"><span class="meta-item"><span class="ml">Assay</span><code>${esc(p.default_assay)}</code></span>
+    <span class="meta-item"><span class="ml">Block status</span><span class="sbadge ${st.cls}">${st.label}</span></span>
+    ${p.min_cells_per_subtype!==undefined?`<span class="meta-item"><span class="ml">Min cells / subtype</span><code>${esc(p.min_cells_per_subtype)}</code></span>`:''}</div>
+  <div class="meta-row"><span class="meta-item"><span class="ml">Disease conditions</span>${conditions}</span></div>
+  <table class="roster mini"><thead><tr><th>Champion</th><th>Affiliation</th><th>Contact</th><th>Role status</th></tr></thead><tbody>${rosterRows}</tbody></table>
+  ${p.notes?`<div class="note tissue-note"><strong>Champion note.</strong> ${esc(p.notes.trim())}</div>`:''}
+  <h3>Cell ontology <span class="count">${(p.cell_ontology||[]).length} broad &middot; ${subtypeCount} subtypes</span></h3>
+  <p class="muted">Two-level labels for this tissue. Marker genes are shown by symbol for
+  readability; in the delivered data they are keyed by <code>gene_id</code>.</p>
+  <div class="tree">${renderCellOntologyTree(p.cell_ontology||[])}</div>
+</section>`;
+  }).join('');
+}
+
+async function init(){
+  try{
+    const [schema,tissueData,criteriaData]=await Promise.all([
+      fetchYaml('../schemas/mskkp_rnaseq_schema.yaml'),
+      fetchYaml('../schemas/tissue_profiles.yaml'),
+      fetchYaml('../schemas/champion_criteria.yaml'),
+    ]);
+    const profiles=tissueData.tissue_profiles;
+    const tissueIds=Object.keys(profiles);
+
+    renderOverview(schema,tissueIds.length);
+    renderObjectSection(schema);
+    renderAnnotations(schema);
+    renderDonor(schema);
+    renderQC(schema);
+    renderVar(schema);
+    renderUns(schema);
+    renderRequiredStructure(schema);
+    renderChampionCriteria(criteriaData.champion_criteria);
+    renderTissueNav(tissueIds);
+    renderTissueRoster(profiles);
+    renderTissueSections(profiles);
+
+    initNavHighlighting();
+  }catch(err){
+    document.getElementById('load-error').style.display='block';
+    document.getElementById('load-error-detail').textContent=err.message;
+    console.error(err);
+  }
+}
+init();
 </script>
 </body></html>

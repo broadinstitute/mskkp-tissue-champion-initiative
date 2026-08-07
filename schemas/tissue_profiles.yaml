@@ -1,0 +1,336 @@
+# =============================================================================
+# MSKKP Tissue Champion — tissue profiles (instance data)
+# =============================================================================
+# This is data, not schema: it conforms to the TissueProfileCollection /
+# TissueProfile / CellTypeDefinition / CellSubtypeDefinition / Champion classes
+# in mskkp_rnaseq_schema.yaml. Validate with:
+#   linkml-validate -s mskkp_rnaseq_schema.yaml -C TissueProfileCollection tissue_profiles.yaml
+#
+# HOW TO FILL IN YOUR BLOCK
+#   1. champions            -> add your name + contact.
+#   2. default_assay        -> confirm scRNA-seq vs snRNA-seq for your tissue
+#                              (this sets which percent.mt threshold applies).
+#   3. disease_conditions   -> list the groups in your cohort (keep "Control").
+#   4. cell_ontology        -> the heart of it. A two-layer list of your cell
+#                              labels, broad to specific:
+#                                broad celltype (the general category)
+#                                  -> specific subtype: [marker gene_ids]
+#                              Markers are listed by gene_id (HGNC or Ensembl),
+#                              the same identifier used as the gene key in var.
+#                              The gene_symbol shown in a trailing comment is
+#                              only a readable aid.
+#   5. status                -> change "draft-starter" to "confirmed" once
+#                              you've reviewed it. Set min_cells_per_subtype
+#                              if you want to override the default cluster-size
+#                              check (champion_criteria.yaml: clusters_well_defined).
+#
+# NOTE ON THE SEEDED CONTENT
+#   skeletal_muscle is a fully worked example. The other six blocks are
+#   pre-seeded with well-established starter populations ONLY to show the
+#   pattern and save a blank page — they are marked status: draft-starter.
+#   Each champion MUST review their whole block line by line and sign off,
+#   with particular attention to disease_conditions and cell_ontology.
+#   The seeded markers are illustrative, not authoritative.
+#
+#   GENE IDENTIFIERS: the seed marker lists below are written as gene_symbols
+#   for readability only and MUST be replaced with the corresponding gene_id
+#   (keep the symbol in a trailing comment if you like).
+# =============================================================================
+
+tissue_profiles:
+
+  cartilage:
+    tissue_id: cartilage
+    champions:
+      - name: Hironori Hojo
+        affiliation: Osaka University
+        email: hojo.hironori.dent@osaka-u.ac.jp
+        confirmed: true
+    default_assay: snRNA-seq            # confirm — matrix-rich tissue, hard to dissociate
+    status: draft-starter               # -> "confirmed" after champion review
+    disease_conditions: [Control, Osteoarthritis]
+    min_cells_per_subtype: 20           # optional override of champion criterion
+    cell_ontology:
+      - name: Chondrocyte
+        subtypes:
+          - name: Chondrocyte-Superficial
+            markers: [PRG4, CILP]
+          - name: Chondrocyte-Homeostatic
+            markers: [COL2A1, ACAN, SOX9]
+          - name: Chondrocyte-Hypertrophic
+            markers: [COL10A1, IBSP]
+      - name: Fibrochondrocyte
+        subtypes:
+          - name: Fibrochondrocyte
+            markers: [COL1A1, COL3A1]
+      - name: Progenitor
+        subtypes:
+          - name: Chondroprogenitor
+            markers: [GDF5, CD34]
+    notes: >
+      Articular cartilage. Consider zonal (superficial/mid/deep) structure and
+      OA-associated states. Confirm whether osteochondral / bone-interface cells
+      belong here or in the bone block to avoid double-counting.
+
+  tendon:
+    tissue_id: tendon
+    champions:
+      - name: Sarah Snelling
+        affiliation: University of Oxford (NDORMS)
+        email: sarah.snelling@ndorms.ox.ac.uk
+        confirmed: true
+      - name: Anne Nichols
+        affiliation: University of Rochester Medical Center
+        email: Anne_Nichols@urmc.rochester.edu
+        confirmed: true
+    default_assay: snRNA-seq            # confirm — dense collagenous matrix
+    status: draft-starter
+    disease_conditions: [Control, Tendinopathy]
+    min_cells_per_subtype: 20
+    cell_ontology:
+      - name: Tenocyte
+        subtypes:
+          - name: Tenocyte
+            markers: [SCX, MKX, TNMD]
+          - name: Tenocyte-Fibro
+            markers: [COL1A1, COL3A1]
+      - name: Progenitor
+        subtypes:
+          - name: Tendon-stem-progenitor
+            markers: [PDGFRA, THY1]
+      - name: Vascular
+        subtypes:
+          - name: Endothelial
+            markers: [PECAM1, VWF]
+          - name: Pericyte
+            markers: [PDGFRB, RGS5]
+      - name: Immune
+        subtypes:
+          - name: Macrophage
+            markers: [CD68, MRC1]
+    notes: >
+      Confirm enthesis (bone-tendon junction) handling and whether to separate
+      mid-substance from peritenon populations.
+
+  bone_marrow:
+    tissue_id: bone_marrow
+    champions:
+      - name: Noriaki Ono
+        affiliation: UTHealth Houston
+        email: Noriaki.Ono@uth.tmc.edu
+        confirmed: true
+    default_assay: scRNA-seq            # confirm — readily dissociated
+    status: draft-starter
+    disease_conditions: [Control, Disease]   # e.g. MDS / AML / myeloma — edit to cohort
+    min_cells_per_subtype: 20
+    cell_ontology:
+      - name: HSPC
+        subtypes:
+          - name: HSC-MPP
+            markers: [CD34, AVP]
+      - name: Erythroid
+        subtypes:
+          - name: Erythroid
+            markers: [GYPA, HBB]
+      - name: Myeloid
+        subtypes:
+          - name: Granulocyte-progenitor
+            markers: [MPO, ELANE]
+          - name: Monocyte
+            markers: [LYZ, CD14]
+      - name: Lymphoid
+        subtypes:
+          - name: T-cell
+            markers: [CD3E]
+          - name: B-cell
+            markers: [MS4A1, CD79A]
+          - name: NK
+            markers: [NKG7, GNLY]
+      - name: Megakaryocyte
+        subtypes:
+          - name: Megakaryocyte
+            markers: [PPBP, PF4]
+      - name: Stroma
+        subtypes:
+          - name: MSC-CAR
+            markers: [LEPR, CXCL12]
+    notes: >
+      Hematopoietic + stromal niche. Decide granularity of the hematopoietic
+      hierarchy (progenitor vs mature) and whether adipocytes are included.
+
+  bone:
+    tissue_id: bone
+    champions:
+      - name: Marc N. Wein
+        affiliation: Massachusetts General Hospital / Harvard
+        email: MNWEIN@mgh.harvard.edu
+        confirmed: true
+      - name: Sze Kwong "Byron" Chan
+        affiliation: Massachusetts General Hospital / Harvard
+        email: skchan@mgh.harvard.edu
+        confirmed: true
+    default_assay: snRNA-seq            # confirm — mineralized tissue
+    status: draft-starter
+    disease_conditions: [Control, Osteoporosis]
+    min_cells_per_subtype: 20
+    cell_ontology:
+      - name: Osteoblast
+        subtypes:
+          - name: Osteoblast
+            markers: [SP7, BGLAP, COL1A1]
+      - name: Osteocyte
+        subtypes:
+          - name: Osteocyte
+            markers: [SOST, DMP1, MEPE]
+      - name: Osteoclast
+        subtypes:
+          - name: Osteoclast
+            markers: [CTSK, ACP5, MMP9]
+      - name: Skeletal-stem
+        subtypes:
+          - name: MSC-SSC
+            markers: [LEPR, GREM1]
+      - name: Chondrocyte
+        subtypes:
+          - name: Growth-plate-chondrocyte
+            markers: [COL2A1, ACAN]
+      - name: Vascular
+        subtypes:
+          - name: Endothelial
+            markers: [PECAM1, EMCN]
+    notes: >
+      Coordinate the bone-cartilage interface with the cartilage champion, and
+      the marrow-resident populations with the bone_marrow champion, so shared
+      cells are assigned to exactly one tissue block.
+
+  ivd:
+    tissue_id: ivd                      # intervertebral disc
+    champions:
+      - name: Dmitriy Sheyn
+        affiliation: Cedars-Sinai Medical Center
+        email: Dmitriy.Sheyn@csmc.edu
+        confirmed: true
+    default_assay: snRNA-seq            # confirm — dense proteoglycan matrix
+    status: draft-starter
+    disease_conditions: [Control, Degeneration]
+    min_cells_per_subtype: 20
+    cell_ontology:
+      - name: Nucleus-pulposus
+        subtypes:
+          - name: NP-cell
+            markers: [KRT8, KRT19, ACAN]
+          - name: Notochordal
+            markers: [TBXT, KRT18]      # TBXT = brachyury; mainly juvenile
+      - name: Annulus-fibrosus
+        subtypes:
+          - name: AF-cell
+            markers: [COL1A1, COL3A1, SFRP2]
+      - name: Cartilage-endplate
+        subtypes:
+          - name: CEP-chondrocyte
+            markers: [COL2A1, ACAN]
+      - name: Immune
+        subtypes:
+          - name: Macrophage
+            markers: [CD68]
+    notes: >
+      Confirm the three anatomical compartments (NP / AF / cartilage endplate)
+      and how notochordal cells are treated across donor ages.
+
+  synovium:
+    tissue_id: synovium
+    champions:
+      - name: Kevin Wei
+        affiliation: Brigham and Women's Hospital
+        email: kwei@bwh.harvard.edu
+        confirmed: true
+    default_assay: scRNA-seq            # confirm — readily dissociated
+    status: draft-starter
+    disease_conditions: [Control, RheumatoidArthritis, Osteoarthritis]
+    min_cells_per_subtype: 20
+    cell_ontology:
+      - name: Fibroblast
+        subtypes:
+          - name: Fibroblast-lining
+            markers: [PRG4, CD55]
+          - name: Fibroblast-sublining
+            markers: [THY1, DKK3]
+      - name: Macrophage
+        subtypes:
+          - name: Macrophage-lining
+            markers: [TREM2, CX3CR1]
+          - name: Macrophage-sublining
+            markers: [MERTK, LYVE1]
+      - name: Vascular
+        subtypes:
+          - name: Endothelial
+            markers: [PECAM1, VWF]
+          - name: Pericyte
+            markers: [PDGFRB, NOTCH3]
+      - name: Lymphocyte
+        subtypes:
+          - name: T-cell
+            markers: [CD3E]
+          - name: B-Plasma
+            markers: [MS4A1, MZB1]
+    notes: >
+      Lining vs sublining distinction is central. In inflammatory disease expect
+      expanded immune compartments; align labels with the AMP/RA synovium atlas.
+
+  skeletal_muscle:
+    tissue_id: skeletal_muscle
+    champions:
+      - name: Carla Cohen
+        affiliation: University of Oxford (MRC WIMM)
+        email: carla.cohen@imm.ox.ac.uk
+        confirmed: false               # not yet marked confirmed
+    default_assay: snRNA-seq
+    status: example                     # fully worked reference; matches the toy dataset
+    disease_conditions: [Control, Sarcopenia]
+    min_cells_per_subtype: 20
+    cell_ontology:
+      - name: Myonucleus
+        subtypes:
+          - name: Myonucleus-Type-I
+            markers: [MYH7, TNNT1]
+          - name: Myonucleus-Type-II
+            markers: [MYH2, MYH1, TNNT3]
+          - name: Myonucleus-NMJ
+            markers: [CHRNE, COLQ]
+      - name: Satellite
+        subtypes:
+          - name: Satellite-Quiescent
+            markers: [PAX7, SPRY1]
+          - name: Satellite-Activated
+            markers: [MYF5, MYOD1]
+      - name: FAP
+        subtypes:
+          - name: FAP-1
+            markers: [PDGFRA, DCN]
+          - name: FAP-2
+            markers: [PDGFRA, OSR1]
+      - name: Endothelial
+        subtypes:
+          - name: Endothelial-Capillary
+            markers: [PECAM1, CD36]
+          - name: Endothelial-Venous
+            markers: [PECAM1, ACKR1]
+      - name: Mural
+        subtypes:
+          - name: Pericyte
+            markers: [PDGFRB, RGS5]
+          - name: SMC
+            markers: [ACTA2, MYH11]
+      - name: Immune
+        subtypes:
+          - name: Macrophage
+            markers: [MRC1, CD163]
+          - name: Tcell
+            markers: [CD3E, CD8A]
+      - name: Tenocyte
+        subtypes:
+          - name: Tenocyte
+            markers: [SCX, TNMD]
+    notes: >
+      Multinucleated fibres make snRNA-seq the norm. Myonuclei dominate; capture
+      enough cells to recover rare NMJ/MTJ and activated satellite populations.
