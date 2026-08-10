@@ -1,0 +1,88 @@
+# =============================================================================
+# MSKKP Tissue Champion — champion criteria (QC thresholds, NOT LinkML)
+# =============================================================================
+# These are aggregate/statistical checks over rows of obs (min/max/n_unique/
+# n_rows, gated by `when` conditions). LinkML validates individual records
+# against slot constraints (required, range, pattern, cardinality) — it has no
+# construct for "the minimum of this column across all rows must exceed X" or
+# "there must be at least 10 distinct values in this column". So this file is
+# a plain machine-readable checklist, meant to be consumed by a small
+# standalone validator (e.g. pandas/anndata script) run against obs, not by
+# linkml-validate. It is the extra bar a dataset must clear to serve as a
+# tissue's REFERENCE ("champion") dataset, on top of passing schema validation
+# against mskkp_rnaseq_schema.yaml.
+#
+# Each rule: field + operator + threshold, optionally gated by a `when`
+# condition. `severity: required` rules must all pass; `recommended` rules are
+# reported but do not block champion status.
+# =============================================================================
+
+champion_criteria:
+
+  - id: min_counts
+    description: Every cell has more than 500 total counts.
+    field: obs.nCount_RNA
+    aggregate: min
+    operator: ">"
+    threshold: 500
+    severity: required
+
+  - id: max_mito_snRNA
+    description: Mitochondrial fraction under 3% for single-nucleus assays.
+    when: obs.assay == "snRNA-seq"
+    field: obs.percent_mt
+    aggregate: max
+    operator: "<"
+    threshold: 3
+    units: percent
+    severity: required
+
+  - id: max_mito_scRNA
+    description: Mitochondrial fraction under 15% for single-cell assays.
+    when: obs.assay == "scRNA-seq"
+    field: obs.percent_mt
+    aggregate: max
+    operator: "<"
+    threshold: 15
+    units: percent
+    severity: required
+
+  - id: annotation_depth
+    description: >
+      Both label layers are present — a broad celltype AND a specific
+      cell_subtype (not just one of them).
+    field: obs.annotations.levels
+    operator: ">="
+    threshold: 2
+    severity: required
+
+  - id: clusters_well_defined
+    description: >
+      Each subtype nests under exactly one celltype and is represented by a
+      reasonable number of cells (proxy for "clearly defined clusters").
+    checks:
+      - every cell_subtype maps to exactly one celltype
+      - min cells per cell_subtype >= 20        # tunable per tissue; see TissueProfile.min_cells_per_subtype
+    severity: required
+
+  - id: donor_count
+    description: At least 10 donors.
+    field: obs.donor_id
+    aggregate: n_unique
+    operator: ">="
+    threshold: 10
+    severity: required
+
+  - id: control_and_disease
+    description: Includes Control and, where available, disease donors.
+    field: obs.disease_status
+    check: contains "Control" and >= 2 distinct values
+    severity: recommended            # disease samples "if available"
+
+  - id: cell_count
+    description: At least 50,000 cells.
+    field: obs
+    aggregate: n_rows
+    operator: ">="
+    threshold: 50000
+    severity: required
