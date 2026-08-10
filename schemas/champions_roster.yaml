@@ -1,0 +1,64 @@
+# =============================================================================
+# MSKKP Tissue Champion — champion roster (NOT part of the schema)
+# =============================================================================
+# Contact info for the person(s) serving as champion for each tissue. This is
+# plain reference data for outreach/tracking — it is not validated against
+# mskkp_rnaseq_schema.yaml and carries no bearing on any dataset's schema
+# conformance. Champion sign-off on a tissue's content is still recorded via
+# TissueProfile.status (confirmed) in tissue_profiles.yaml.
+#
+# confirmed here means: this person has agreed to serve as champion — NOT
+# that the tissue_profile block's content is finalized (see TissueProfile.status).
+# =============================================================================
+
+champions_roster:
+
+  cartilage:
+    - name: Hironori Hojo
+      affiliation: Osaka University
+      email: hojo.hironori.dent@osaka-u.ac.jp
+      confirmed: true
+
+  tendon:
+    - name: Sarah Snelling
+      affiliation: University of Oxford (NDORMS)
+      email: sarah.snelling@ndorms.ox.ac.uk
+      confirmed: true
+    - name: Anne Nichols
+      affiliation: University of Rochester Medical Center
+      email: Anne_Nichols@urmc.rochester.edu
+      confirmed: true
+
+  bone_marrow:
+    - name: Noriaki Ono
+      affiliation: UTHealth Houston
+      email: Noriaki.Ono@uth.tmc.edu
+      confirmed: true
+
+  bone:
+    - name: Marc N. Wein
+      affiliation: Massachusetts General Hospital / Harvard
+      email: MNWEIN@mgh.harvard.edu
+      confirmed: true
+    - name: Sze Kwong "Byron" Chan
+      affiliation: Massachusetts General Hospital / Harvard
+      email: skchan@mgh.harvard.edu
+      confirmed: true
+
+  ivd:
+    - name: Dmitriy Sheyn
+      affiliation: Cedars-Sinai Medical Center
+      email: Dmitriy.Sheyn@csmc.edu
+      confirmed: true
+
+  synovium:
+    - name: Kevin Wei
+      affiliation: Brigham and Women's Hospital
+      email: kwei@bwh.harvard.edu
+      confirmed: true
+
+  skeletal_muscle:
+    - name: Carla Cohen
+      affiliation: University of Oxford (MRC WIMM)
+      email: carla.cohen@imm.ox.ac.uk
+      confirmed: true

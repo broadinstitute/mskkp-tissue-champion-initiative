@@ -6,11 +6,12 @@
 # donor info, QC metrics), per-gene var metadata, and uns provenance. These
 # classes are identical across all 7 musculoskeletal tissues.
 #
-# Tissue-specific content — each champion's cell-type ontology, disease
+# Tissue-specific content — each tissue's cell-type ontology, disease
 # conditions, default assay, etc. — is NOT defined here. It's instance data
 # that conforms to the TissueProfile / TissueProfileCollection classes below,
-# and lives in tissue_profiles.yaml, one block per tissue, owned by that
-# tissue's champion.
+# and lives in tissue_profiles.yaml, one block per tissue. Champion contact
+# info (name/affiliation/email) is kept out of this schema and tracked
+# separately — see schemas/champions_roster.yaml.
 #
 # The champion_criteria (aggregate QC thresholds like "min(nCount_RNA) > 500"
 # or "n_unique(donor_id) >= 10") live in champion_criteria.yaml and are
@@ -106,7 +107,7 @@ enums:
       draft-starter:
         description: Pre-seeded starter content; not yet reviewed by the champion.
       confirmed:
-        description: Champion has reviewed the block line by line and signed off.
+        description: Champion has reviewed the block's content and signed off.
       example:
         description: Fully worked reference block (skeletal_muscle) matching the toy dataset.
 
@@ -305,21 +306,9 @@ classes:
         description: uns.donor_metadata, if supplied.
 
   # ---------------------------------------------------------------------------
-  # 7. TISSUE_PROFILES — one fill-in block per champion (instance data; see
+  # 5. TISSUE_PROFILES — one fill-in block per tissue (instance data; see
   #    tissue_profiles.yaml for the actual 7 blocks validated against this).
   # ---------------------------------------------------------------------------
-  Champion:
-    attributes:
-      name:
-        required: true
-      affiliation:
-      email:
-      confirmed:
-        range: boolean
-        description: >-
-          Whether this person has agreed to serve as champion — NOT whether
-          the tissue_profile block's content is finalized (see TissueProfile.status).
-
   CellSubtypeDefinition:
     description: One Level-2 subtype and its marker genes, within a CellTypeDefinition.
     attributes:
@@ -342,15 +331,11 @@ classes:
         inlined_as_list: true
 
   TissueProfile:
-    description: One champion's fill-in block for their musculoskeletal tissue.
+    description: One fill-in block for a musculoskeletal tissue.
     attributes:
       tissue_id:
         identifier: true
         required: true
-      champions:
-        range: Champion
-        multivalued: true
-        inlined_as_list: true
       default_assay:
         range: AssayEnum
         required: true
@@ -370,7 +355,7 @@ classes:
       notes:
 
   TissueProfileCollection:
-    description: All 7 musculoskeletal tissue champion blocks, keyed by tissue_id.
+    description: All 7 musculoskeletal tissue blocks, keyed by tissue_id.
     attributes:
       tissue_profiles:
         range: TissueProfile

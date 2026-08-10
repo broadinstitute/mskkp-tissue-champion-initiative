@@ -223,8 +223,8 @@ table.crit td:nth-child(3) code{background:transparent;border:none;padding:0;col
 <body>
 <div id="load-error" class="note warn" style="display:none">
   <strong>Couldn't load the schema.</strong> This page renders live from
-  <code>../schemas/mskkp_rnaseq_schema.yaml</code>, <code>tissue_profiles.yaml</code>, and
-  <code>champion_criteria.yaml</code>. If you opened this file directly (<code>file://</code>),
+  <code>../schemas/mskkp_rnaseq_schema.yaml</code>, <code>tissue_profiles.yaml</code>,
+  <code>champion_criteria.yaml</code>, and <code>champions_roster.yaml</code>. If you opened this file directly (<code>file://</code>),
   browsers block local <code>fetch()</code> calls &mdash; serve the repo over HTTP instead, e.g.
   <code>python3 -m http.server</code> from the repo root, then open
   <code>http://localhost:8000/html/mskkp_schema_docs.html</code>.
@@ -503,7 +503,7 @@ function renderOverview(schema,tissueCount){
   const statusEl=document.getElementById('overview-status');
   statusEl.textContent=schema.status;
   statusEl.className='sbadge '+(schema.status==='draft'?'draft':'done');
-  document.getElementById('overview-applies-to').textContent=`musculoskeletal tissues (${tissueCount} champions)`;
+  document.getElementById('overview-applies-to').textContent=`musculoskeletal tissues (${tissueCount})`;
 
   const maintainers=(schema.comments||[]).map(c=>{
     const idx=c.indexOf(':');
@@ -644,6 +644,7 @@ function displayName(tissueId){
   return TISSUE_DISPLAY_NAME[tissueId]||(tissueId.charAt(0).toUpperCase()+tissueId.slice(1));
 }
 function championStatus(champions){
+  if(!champions.length) return '<span class="pending">pending</span>';
   const allConfirmed=champions.every(c=>c.confirmed);
   const noneConfirmed=champions.every(c=>!c.confirmed);
   if(allConfirmed) return '<span class="ok">&#10003;</span>';
@@ -660,14 +661,15 @@ function renderTissueNav(tissueIds){
     tissueIds.map(id=>`<a href="#tissue-${id}">${esc(displayName(id))}</a>`).join('');
 }
 
-function renderTissueRoster(profiles){
+function renderTissueRoster(profiles,roster){
   document.getElementById('tissue-roster-body').innerHTML=Object.values(profiles).map(p=>{
-    const names=p.champions.map(c=>esc(c.name)).join('<br>');
-    const contacts=p.champions.map(c=>`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`).join('<br>');
+    const champions=roster[p.tissue_id]||[];
+    const names=champions.map(c=>esc(c.name)).join('<br>');
+    const contacts=champions.map(c=>`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`).join('<br>');
     const st=STATUS_LABEL[p.status]||{cls:'draft',label:esc(p.status)};
     return `<tr><td><a href="#tissue-${p.tissue_id}"><strong>${esc(displayName(p.tissue_id))}</strong></a></td>
       <td>${names}</td><td>${contacts}</td><td><code>${esc(p.default_assay)}</code></td>
-      <td><span class="sbadge ${st.cls}">${st.label}</span></td><td>${championStatus(p.champions)}</td></tr>`;
+      <td><span class="sbadge ${st.cls}">${st.label}</span></td><td>${championStatus(champions)}</td></tr>`;
   }).join('');
 }
 
@@ -681,11 +683,12 @@ function renderCellOntologyTree(cellOntology){
   }).join('');
 }
 
-function renderTissueSections(profiles){
+function renderTissueSections(profiles,roster){
   document.getElementById('tissue-sections').innerHTML=Object.values(profiles).map(p=>{
     const st=STATUS_LABEL[p.status]||{cls:'draft',label:esc(p.status)};
     const conditions=(p.disease_conditions||[]).map(c=>`<span class="cond">${esc(c)}</span>`).join(' ');
-    const rosterRows=p.champions.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.affiliation||'')}</td>
+    const champions=roster[p.tissue_id]||[];
+    const rosterRows=champions.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.affiliation||'')}</td>
       <td><a href="mailto:${esc(c.email)}">${esc(c.email)}</a></td>
       <td>${c.confirmed?'<span class="ok">&#10003; confirmed</span>':'<span class="pending">pending</span>'}</td></tr>`).join('');
     const subtypeCount=(p.cell_ontology||[]).reduce((n,ct)=>n+(ct.subtypes||[]).length,0);
@@ -708,13 +711,15 @@ function renderTissueSections(profiles){
 
 async function init(){
   try{
-    const [schema,tissueData,criteriaData]=await Promise.all([
+    const [schema,tissueData,criteriaData,rosterData]=await Promise.all([
       fetchYaml('../schemas/mskkp_rnaseq_schema.yaml'),
       fetchYaml('../schemas/tissue_profiles.yaml'),
       fetchYaml('../schemas/champion_criteria.yaml'),
+      fetchYaml('../schemas/champions_roster.yaml'),
     ]);
     const profiles=tissueData.tissue_profiles;
     const tissueIds=Object.keys(profiles);
+    const roster=rosterData.champions_roster||{};
 
     renderOverview(schema,tissueIds.length);
     renderObjectSection(schema);
@@ -726,8 +731,8 @@ async function init(){
     renderRequiredStructure(schema);
     renderChampionCriteria(criteriaData.champion_criteria);
     renderTissueNav(tissueIds);
-    renderTissueRoster(profiles);
-    renderTissueSections(profiles);
+    renderTissueRoster(profiles,roster);
+    renderTissueSections(profiles,roster);
 
     initNavHighlighting();
   }catch(err){
