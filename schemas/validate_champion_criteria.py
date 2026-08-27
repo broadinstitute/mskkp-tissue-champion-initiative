@@ -142,19 +142,19 @@ class Result:
     Attributes:
         rule_id (str): The rule's ``id`` from champion_criteria.yaml (e.g.
             ``"min_counts"``).
-        severity (str): ``"required"`` or ``"recommended"``, copied from the
+        status (str): ``"required"`` or ``"recommended"``, copied from the
             rule definition (or hardcoded for the special-cased rules).
         passed (bool): Whether the rule's condition held for this dataset.
         detail (str): A human-readable explanation of the computed value(s)
             and why the rule passed or failed, printed in the report.
     """
 
-    def __init__(self, rule_id, severity, passed, detail):
+    def __init__(self, rule_id, status, passed, detail):
         """Construct a Result.
 
         Args:
             rule_id (str): The rule's ``id`` from champion_criteria.yaml.
-            severity (str): ``"required"`` or ``"recommended"``.
+            status (str): ``"required"`` or ``"recommended"``.
             passed (bool): Whether the rule's condition held.
             detail (str): Human-readable explanation for the report.
 
@@ -162,7 +162,7 @@ class Result:
             None
         """
         self.rule_id = rule_id
-        self.severity = severity
+        self.status = status
         self.passed = passed
         self.detail = detail
 
@@ -171,14 +171,14 @@ def check_simple_rule(rule, obs):
     """Evaluate a field + aggregate + operator + threshold rule from champion_criteria.yaml.
 
     Handles every rule shape except ``annotation_depth``,
-    ``clusters_well_defined``, and ``control_and_disease``, which have their
+    ``celltype_well_defined``, and ``control_and_disease``, which have their
     own dedicated check functions and are dispatched separately by
     ``run_all``. If the rule has a ``when`` condition and no rows match it,
     the rule is treated as vacuously satisfied.
 
     Args:
         rule (dict): A single rule dict from champion_criteria.yaml, with
-            keys ``id`` (str), ``severity`` (str), ``aggregate`` (str, one
+            keys ``id`` (str), ``status`` (str), ``aggregate`` (str, one
             of ``AGGREGATES``), ``field`` (str, e.g. ``"obs.nCount_RNA"``),
             ``operator`` (str, one of ``OPERATORS``), ``threshold``
             (int | float), and optionally ``when`` (str).
@@ -189,7 +189,7 @@ def check_simple_rule(rule, obs):
     """
     subset = eval_when(obs, rule["when"]) if "when" in rule else obs
     if subset.empty and "when" in rule:
-        return Result(rule["id"], rule["severity"], True, "no rows match `when` — vacuously satisfied")
+        return Result(rule["id"], rule["status"], True, "no rows match `when` — vacuously satisfied")
 
     aggregate = rule["aggregate"]
     if aggregate == "n_rows":
@@ -197,69 +197,71 @@ def check_simple_rule(rule, obs):
     else:
         col = resolve_column(subset, rule["field"])
         if col is None:
-            return Result(rule["id"], rule["severity"], False, f"column for {rule['field']} not found in obs")
+            return Result(rule["id"], rule["status"], False, f"column for {rule['field']} not found in obs")
         value = AGGREGATES[aggregate](subset[col])
 
     op = OPERATORS[rule["operator"]]
     passed = bool(op(value, rule["threshold"]))
     return Result(
-        rule["id"], rule["severity"], passed,
+        rule["id"], rule["status"], passed,
         f"{aggregate}({rule['field']}) = {value} {rule['operator']} {rule['threshold']} -> {'PASS' if passed else 'FAIL'}",
     )
 
 
 def check_annotation_depth(obs):
-    """Check the `annotation_depth` rule: both celltype and cell_subtype are present.
+    """Check the `annotation_depth` rule: both author_celltype and author_cell_subtype are present.
 
     Args:
         obs (pandas.DataFrame): The obs table to check. Must be checked for
-            the presence of non-null values in the ``celltype`` and
-            ``cell_subtype`` columns.
+            the presence of non-null values in the ``author_celltype`` and
+            ``author_cell_subtype`` columns.
 
     Returns:
-        Result: Always ``severity="required"``. Passes if both the
-        ``celltype`` and ``cell_subtype`` columns exist in ``obs`` and each
-        has at least one non-null value.
+        Result: Always ``status="required"``. Passes if both the
+        ``author_celltype`` and ``author_cell_subtype`` columns exist in
+        ``obs`` and each has at least one non-null value.
     """
-    has_celltype = "celltype" in obs.columns and obs["celltype"].notna().any()
-    has_subtype = "cell_subtype" in obs.columns and obs["cell_subtype"].notna().any()
+    has_celltype = "author_celltype" in obs.columns and obs["author_celltype"].notna().any()
+    has_subtype = "author_cell_subtype" in obs.columns and obs["author_cell_subtype"].notna().any()
     levels = int(has_celltype) + int(has_subtype)
     passed = levels >= 2
     return Result("annotation_depth", "required", passed, f"levels present = {levels} (need >= 2)")
 
 
-def check_clusters_well_defined(obs, min_cells_per_subtype):
-    """Check the `clusters_well_defined` rule: clean nesting and minimum cluster size.
+def check_celltype_well_defined(obs, min_cells_per_subtype):
+    """Check the `celltype_well_defined` rule: clean nesting and minimum group size.
 
-    Verifies that every ``cell_subtype`` value maps to at most one
-    ``celltype`` value (clean Level-2-under-Level-1 nesting), and that every
-    ``cell_subtype`` group has at least ``min_cells_per_subtype`` cells.
+    Verifies that every ``author_cell_subtype`` value maps to at most one
+    ``author_celltype`` value (clean Level-2-under-Level-1 nesting), and that
+    every ``author_cell_subtype`` group has at least ``min_cells_per_subtype``
+    cells.
 
     Args:
         obs (pandas.DataFrame): The obs table to check.
         min_cells_per_subtype (int): The minimum number of cells required
-            per distinct ``cell_subtype`` value, typically the tissue's
-            ``TissueProfile.min_cells_per_subtype`` (default 20).
+            per distinct ``author_cell_subtype`` value, typically the
+            tissue's ``TissueProfile.min_cells_per_subtype`` (default 20).
 
     Returns:
-        Result: Always ``severity="required"``. Fails if the ``celltype``
-        or ``cell_subtype`` columns are missing, if any ``cell_subtype``
-        maps to more than one ``celltype``, or if any ``cell_subtype``
-        group has fewer than ``min_cells_per_subtype`` cells.
+        Result: Always ``status="required"``. Fails if the
+        ``author_celltype`` or ``author_cell_subtype`` columns are missing,
+        if any ``author_cell_subtype`` maps to more than one
+        ``author_celltype``, or if any ``author_cell_subtype`` group has
+        fewer than ``min_cells_per_subtype`` cells.
     """
-    if "celltype" not in obs.columns or "cell_subtype" not in obs.columns:
-        return Result("clusters_well_defined", "required", False, "celltype/cell_subtype columns missing")
+    if "author_celltype" not in obs.columns or "author_cell_subtype" not in obs.columns:
+        return Result("celltype_well_defined", "required", False, "author_celltype/author_cell_subtype columns missing")
 
-    nests_ok = (obs.groupby("cell_subtype")["celltype"].nunique() <= 1).all()
-    sizes = obs.groupby("cell_subtype").size()
+    nests_ok = (obs.groupby("author_cell_subtype")["author_celltype"].nunique() <= 1).all()
+    sizes = obs.groupby("author_cell_subtype").size()
     sizes_ok = bool((sizes >= min_cells_per_subtype).all())
     passed = bool(nests_ok and sizes_ok)
     smallest = sizes.min() if len(sizes) else 0
     detail = (
-        f"every cell_subtype maps to <=1 celltype: {nests_ok}; "
-        f"smallest cell_subtype has {smallest} cells (need >= {min_cells_per_subtype}): {sizes_ok}"
+        f"every author_cell_subtype maps to <=1 author_celltype: {nests_ok}; "
+        f"smallest author_cell_subtype has {smallest} cells (need >= {min_cells_per_subtype}): {sizes_ok}"
     )
-    return Result("clusters_well_defined", "required", passed, detail)
+    return Result("celltype_well_defined", "required", passed, detail)
 
 
 def check_control_and_disease(obs):
@@ -269,7 +271,7 @@ def check_control_and_disease(obs):
         obs (pandas.DataFrame): The obs table to check.
 
     Returns:
-        Result: Always ``severity="recommended"`` (disease samples are only
+        Result: Always ``status="recommended"`` (disease samples are only
         expected "if available"). Passes if the ``disease_status`` column
         exists and its non-null values include ``"Control"`` plus at least
         one other distinct value.
@@ -286,7 +288,7 @@ def run_all(obs, criteria, min_cells_per_subtype):
     """Evaluate every rule in champion_criteria.yaml against a dataset's obs.
 
     Dispatches each rule to its dedicated check function by ``id``
-    (``annotation_depth``, ``clusters_well_defined``,
+    (``annotation_depth``, ``celltype_well_defined``,
     ``control_and_disease``), falling back to ``check_simple_rule`` for
     every other rule.
 
@@ -295,7 +297,7 @@ def run_all(obs, criteria, min_cells_per_subtype):
         criteria (list[dict]): The ``champion_criteria`` list loaded from
             champion_criteria.yaml.
         min_cells_per_subtype (int): Passed through to
-            ``check_clusters_well_defined``.
+            ``check_celltype_well_defined``.
 
     Returns:
         list[Result]: One Result per rule in ``criteria``, in the same order.
@@ -305,8 +307,8 @@ def run_all(obs, criteria, min_cells_per_subtype):
         rid = rule["id"]
         if rid == "annotation_depth":
             results.append(check_annotation_depth(obs))
-        elif rid == "clusters_well_defined":
-            results.append(check_clusters_well_defined(obs, min_cells_per_subtype))
+        elif rid == "celltype_well_defined":
+            results.append(check_celltype_well_defined(obs, min_cells_per_subtype))
         elif rid == "control_and_disease":
             results.append(check_control_and_disease(obs))
         else:
@@ -365,11 +367,10 @@ def main():
     print(f"Champion criteria for tissue={args.tissue} ({len(obs)} cells)\n")
     any_required_failed = False
     for r in results:
-        status = "PASS" if r.passed else "FAIL"
-        if not r.passed and r.severity == "required":
+        outcome = "PASS" if r.passed else "FAIL"
+        if not r.passed and r.status == "required":
             any_required_failed = True
-        tag = "required" if r.severity == "required" else "recommended"
-        print(f"  [{status}] {r.rule_id} ({tag})\n         {r.detail}")
+        print(f"  [{outcome}] {r.rule_id} ({r.status})\n         {r.detail}")
 
     print()
     if any_required_failed:
