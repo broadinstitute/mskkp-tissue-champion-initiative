@@ -13,57 +13,59 @@
 # against mskkp_rnaseq_schema.yaml.
 #
 # Each rule: field + operator + threshold, optionally gated by a `when`
-# condition. `severity: required` rules must all pass; `recommended` rules are
+# condition. `status: required` rules must all pass; `recommended` rules are
 # reported but do not block champion status.
 # =============================================================================
 
 champion_criteria:
 
   - id: min_counts
-    description: Every cell has more than 500 total counts.
+    description: Every cell has more than 300 total counts.
     field: obs.nCount_RNA
     aggregate: min
     operator: ">"
-    threshold: 500
-    severity: required
+    threshold: 300
+    status: required
 
   - id: max_mito_snRNA
-    description: Mitochondrial fraction under 3% for single-nucleus assays.
+    description: Mitochondrial fraction under 5% for single-nucleus assays.
     when: obs.assay == "snRNA-seq"
     field: obs.percent_mt
     aggregate: max
     operator: "<"
-    threshold: 3
+    threshold: 5
     units: percent
-    severity: required
+    status: required
 
   - id: max_mito_scRNA
-    description: Mitochondrial fraction under 15% for single-cell assays.
+    description: Mitochondrial fraction under 20% for single-cell assays.
     when: obs.assay == "scRNA-seq"
     field: obs.percent_mt
     aggregate: max
     operator: "<"
-    threshold: 15
+    threshold: 20
     units: percent
-    severity: required
+    status: required
 
   - id: annotation_depth
     description: >
-      Both label layers are present — a broad celltype AND a specific
-      cell_subtype (not just one of them).
+      Both author-provided label layers are present — a broad
+      author_celltype AND a specific author_cell_subtype (not just one of
+      them).
     field: obs.annotations.levels
     operator: ">="
     threshold: 2
-    severity: required
+    status: required
 
-  - id: clusters_well_defined
+  - id: celltype_well_defined
     description: >
-      Each subtype nests under exactly one celltype and is represented by a
-      reasonable number of cells (proxy for "clearly defined clusters").
+      Each author_cell_subtype nests under exactly one author_celltype and
+      is represented by a reasonable number of cells (proxy for
+      well-resolved cell types).
     checks:
-      - every cell_subtype maps to exactly one celltype
-      - min cells per cell_subtype >= 20        # tunable per tissue; see TissueProfile.min_cells_per_subtype
-    severity: required
+      - every author_cell_subtype maps to exactly one author_celltype
+      - min cells per author_cell_subtype >= 20  # tunable per tissue; see TissueProfile.min_cells_per_subtype
+    status: required
 
   - id: donor_count
     description: At least 10 donors.
@@ -71,13 +73,13 @@ champion_criteria:
     aggregate: n_unique
     operator: ">="
     threshold: 10
-    severity: required
+    status: recommended
 
   - id: control_and_disease
     description: Includes Control and, where available, disease donors.
     field: obs.disease_status
     check: contains "Control" and >= 2 distinct values
-    severity: recommended            # disease samples "if available"
+    status: recommended            # disease samples "if available"
 
   - id: cell_count
     description: At least 50,000 cells.
@@ -85,4 +87,4 @@ champion_criteria:
     aggregate: n_rows
     operator: ">="
     threshold: 50000
-    severity: required
+    status: recommended

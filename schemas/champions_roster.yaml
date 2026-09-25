@@ -4,11 +4,9 @@
 # Contact info for the person(s) serving as champion for each tissue. This is
 # plain reference data for outreach/tracking — it is not validated against
 # mskkp_rnaseq_schema.yaml and carries no bearing on any dataset's schema
-# conformance. Champion sign-off on a tissue's content is still recorded via
-# TissueProfile.status (confirmed) in tissue_profiles.yaml.
+# conformance.
 #
-# confirmed here means: this person has agreed to serve as champion — NOT
-# that the tissue_profile block's content is finalized (see TissueProfile.status).
+# confirmed here means: this person has agreed to serve as champion.
 # =============================================================================
 
 champions_roster:
@@ -60,5 +58,5 @@ champions_roster:
   skeletal_muscle:
     - name: Carla Cohen
       affiliation: University of Oxford (MRC WIMM)
-      email: carla.cohen@imm.ox.ac.uk
+      email: Carla.cohen@ndorms.ox.ac.uk
       confirmed: true

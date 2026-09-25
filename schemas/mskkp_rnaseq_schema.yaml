@@ -30,7 +30,7 @@ version: 0.1.0-draft
 status: draft
 comments:
   - "initiative_lead: Jeremy Arbesfeld (Knowledge Portal Network)"
-  - "schema_author: Luca Tucciarone (Gaulton Lab) - original template"
+  - "schema_conceptualized_by: Luca Tucciarone (Gaulton Lab)"
 
 license: https://creativecommons.org/licenses/by/4.0/
 
@@ -38,8 +38,9 @@ prefixes:
   linkml: https://w3id.org/linkml/
   mskkp: https://github.com/broadinstitute/mskkp-tissue-champion-initiative/
   CL: http://purl.obolibrary.org/obo/CL_
-  HGNC: https://identifiers.org/hgnc/
-  ENSEMBL: https://identifiers.org/ensembl/
+  HGNC: http://identifiers.org/hgnc/
+  ENSEMBL: http://identifiers.org/ensembl/
+  EFO: http://identifiers.org/efo/
 
 default_prefix: mskkp
 default_range: string
@@ -58,7 +59,12 @@ enums:
       h5ad:
         description: AnnData (Python) — preferred.
       rds:
-        description: Seurat (R) — accepted equivalent.
+        description: Seurat object (R), serialized as .rds — accepted equivalent.
+      sce:
+        description: >-
+          SingleCellExperiment (R/Bioconductor), serialized as .rds —
+          accepted equivalent. Distinguish from the Seurat `rds` value in
+          accompanying documentation, since both share the .rds extension.
 
   AssayEnum:
     description: Single-cell vs single-nucleus RNA-seq. Drives the percent.mt threshold.
@@ -68,10 +74,77 @@ enums:
       snRNA-seq:
         description: Single-nucleus RNA-seq.
 
+  SuspensionTypeEnum:
+    description: >-
+      Whether the sequenced suspension was made of whole cells or isolated
+      nuclei. Usually implied by assay (scRNA-seq -> cell, snRNA-seq ->
+      nucleus) but requested explicitly since a handful of protocols mix
+      the two (e.g. nuclei recovered from a cell suspension).
+    permissible_values:
+      cell:
+      nucleus:
+      unknown:
+
+  TissueCollectionMethodEnum:
+    description: How the tissue sample was obtained from the donor.
+    permissible_values:
+      surgery:
+        description: Surgical resection/excision from a living donor.
+      postmortem:
+        description: Autopsy/postmortem collection.
+      biopsy:
+        description: Needle or punch biopsy from a living donor.
+      other:
+        description: Any other collection route.
+
+  StorageMethodEnum:
+    description: How the sample was stored between collection and processing.
+    permissible_values:
+      fresh:
+        description: Processed fresh, not frozen.
+      frozen_minus70:
+        description: Frozen and stored at approximately -70C to -80C.
+      frozen_liquid_nitrogen:
+        description: Frozen and stored in liquid nitrogen (vapor or immersion).
+      other:
+        description: Any other storage method.
+
+  DissociationMethodEnum:
+    description: How the tissue was dissociated into a single-cell/nucleus suspension.
+    permissible_values:
+      mechanical:
+        description: Mechanical dissociation only (e.g. mincing, dounce homogenization).
+      enzymatic_collagenase:
+        description: Enzymatic digestion using collagenase (or similar).
+      combined_mechanical_enzymatic:
+        description: Combined mechanical and enzymatic dissociation.
+      other:
+        description: Any other dissociation method.
+
   SexEnum:
+    description: Donor sex.
     permissible_values:
       M:
       F:
+      unknown:
+
+  AgeBandEnum:
+    description: >-
+      Decade-wide donor age bands, used instead of exact age to reduce
+      re-identification risk. Ages 90 and above are bundled into a single
+      band, consistent with common de-identification practice for
+      long-tail-rare ages.
+    permissible_values:
+      0-9:
+      10-19:
+      20-29:
+      30-39:
+      40-49:
+      50-59:
+      60-69:
+      70-79:
+      80-89:
+      90+:
       unknown:
 
   GeneIdSystemEnum:
@@ -80,11 +153,33 @@ enums:
       hgnc:
       ensembl:
 
-  XHoldsEnum:
-    description: What adata.X contains for this dataset.
+  FilterStatusEnum:
+    description: >-
+      Whether the cells represented in obs/the matrices have been filtered
+      against a QC threshold (e.g. min genes/UMIs per cell), left as the
+      unfiltered raw droplet output, or both are supplied. "Raw" in
+      raw_counts refers to unnormalized counts, not filtering status — the
+      two are independent and must both be declared.
     permissible_values:
-      normalized:
-      raw:
+      filtered:
+        description: >-
+          Only cells passing the submitter's QC threshold are included.
+          filtering_criteria must describe that threshold.
+      unfiltered:
+        description: All droplets/barcodes are included, prior to any cell-calling QC filter.
+      both:
+        description: >-
+          The dataset supplies both a filtered and an unfiltered version
+          (e.g. as separate objects or layers); filtering_criteria describes
+          the filtered version's threshold.
+
+  EmbeddingTypeEnum:
+    description: Low-dimensional embeddings requested for platform visualization.
+    permissible_values:
+      pca:
+        description: Linear PCA embedding, typically the input to downstream integration/UMAP.
+      umap:
+        description: 2D UMAP embedding used for visualization.
 
   CertificationLevelEnum:
     description: >-
@@ -102,14 +197,22 @@ enums:
           Reviewed and endorsed by the tissue's champion community — meets
           champion_criteria and the tissue champion has signed off.
 
-  TissueProfileStatusEnum:
+  AnnotationMethodEnum:
+    description: How cell-type labels (author_celltype/author_cell_subtype) were derived.
     permissible_values:
-      draft-starter:
-        description: Pre-seeded starter content; not yet reviewed by the champion.
-      confirmed:
-        description: Champion has reviewed the block's content and signed off.
-      example:
-        description: Fully worked reference block (skeletal_muscle) matching the toy dataset.
+      clustering_manual:
+        description: Unsupervised clustering followed by manual, marker-based annotation of clusters.
+      reference_mapping:
+        description: >-
+          Automated label transfer from a reference atlas/dataset (e.g.
+          Azimuth, scANVI, CellTypist, SingleR). annotation_reference must
+          name the reference + tool.
+      marker_based:
+        description: >-
+          Direct per-cell marker-gene scoring or rule-based classification,
+          without a clustering step.
+      other:
+        description: Any other method; annotation_reference must elaborate.
 
 # -----------------------------------------------------------------------------
 # Classes — 1. OBJECT (file format and expression matrices)
@@ -127,46 +230,143 @@ classes:
         range: boolean
         required: true
         description: >-
-          Unnormalized integer UMI counts (dtype: integer). Exactly one
-          location must hold these; if stored in adata.X instead of a layer,
-          that must be declared in uns.schema.X_holds.
+          Unnormalized UMI counts, integer-valued (stored as numpy.float32
+          per HCA/cellxgene convention, not int, for h5ad compatibility).
+          X is left untouched by normalization/scaling and always holds
+          this matrix — there is no separate flag for where it lives.
         comments:
-          - 'location_h5ad: adata.layers["counts"]'
+          - 'location_h5ad: adata.X, scipy.sparse.csr_matrix, dtype numpy.float32 with integer values'
           - 'location_seurat: obj[["RNA"]]@counts'
       normalized:
         range: boolean
         required: true
         description: >-
-          Log-normalized expression, Seurat "data" slot equivalent (dtype:
-          float). Default method LogNormalize, scale factor 10000.
+          Log-normalized expression, derived from X, Seurat "data" slot
+          equivalent (dtype: float). Default method LogNormalize, scale
+          factor 10000.
         comments:
-          - 'location_h5ad: adata.X'
+          - 'location_h5ad: adata.layers["normalized"], scipy.sparse.csr_matrix, dtype numpy.float32'
           - 'location_seurat: obj[["RNA"]]@data'
+      scaled:
+        range: boolean
+        required: false
+        description: >-
+          Scaled expression (e.g. centered/z-scored), Seurat "scale.data"
+          slot equivalent, derived from the normalized layer. Only
+          available for projects processed before 2026-04-28 — omit for
+          projects processed on or after that date.
+        comments:
+          - 'location_h5ad: adata.layers["scaled"]'
+          - 'location_seurat: obj[["RNA"]]@scale.data'
+      ambient_corrected:
+        range: boolean
+        required: false
+        description: >-
+          Optional ambient RNA-corrected counts matrix (e.g. CellBender or
+          SoupX output), derived from X. Not required, but strongly
+          encouraged for MSK tissues, where ambient contamination has been
+          a critical confounder. If supplied, ambient_correction_method
+          must be set.
+        comments:
+          - 'location_h5ad: adata.layers["ambient_corrected"]'
+          - 'location_seurat: obj[["RNA"]]@misc$ambient_corrected, or an added assay'
+      ambient_correction_method:
+        required: false
+        description: >-
+          Tool and version/parameters used to produce ambient_corrected
+          (e.g. "CellBender remove-background v0.3.0, default priors" or
+          "SoupX autoEstCont"). Required if ambient_corrected is true.
+      filter_status:
+        range: FilterStatusEnum
+        required: true
+        description: >-
+          Whether obs/the matrices above represent filtered cells,
+          unfiltered droplets, or both. See FilterStatusEnum.
+      filtering_criteria:
+        required: false
+        description: >-
+          Free-text description of the QC threshold(s) used to produce the
+          filtered cell set (e.g. "cells with >=300 genes and >=500 UMIs
+          retained; empty droplets called via EmptyDrops"). Required when
+          filter_status is filtered or both.
+      embeddings:
+        range: EmbeddingSpec
+        multivalued: true
+        inlined_as_list: true
+        required: true
+        description: >-
+          obsm embeddings supplied for platform visualization. Must include
+          at least one pca and one umap entry.
+
+  EmbeddingSpec:
+    description: >-
+      One obsm entry (e.g. adata.obsm["X_umap"]) and the provenance needed
+      to interpret it — in particular whether/how batch integration was
+      applied before it was computed.
+    attributes:
+      type:
+        range: EmbeddingTypeEnum
+        required: true
+        description: Which embedding this entry is — pca or umap.
+      integration_method:
+        required: false
+        description: >-
+          Integration method applied before computing this embedding, if
+          any (e.g. "Harmony", "scVI", "Seurat CCA"). Omit or leave unset if
+          no integration was performed (e.g. single-donor dataset).
+      integration_params:
+        required: false
+        description: >-
+          Key parameters/covariates used for integration (e.g. "batch_key:
+          donor_id; theta: 2" for Harmony). Required if integration_method is set.
+      location:
+        required: false
+        description: Where this embedding is stored, if not the obvious default.
+        comments:
+          - 'location_h5ad_default: adata.obsm["X_pca"] / adata.obsm["X_umap"]'
+          - 'location_seurat_default: obj[["pca"]] / obj[["umap"]]'
 
   # ---------------------------------------------------------------------------
   # 2. OBS — cell-level metadata (one row per cell)
   # ---------------------------------------------------------------------------
   CellObservation:
     description: >-
-      One row of obs: metadata for a single cell. Every cell gets two required
-      annotation levels, broad to specific: celltype (Level 1, e.g.
-      "Myonucleus") and cell_subtype (Level 2, e.g. "Myonucleus-Type-I"), where
-      every cell_subtype value must nest under exactly one celltype value.
+      One row of obs (Seurat equivalent: one row of object@meta.data):
+      metadata for a single cell. Every cell gets two required
+      author-provided annotation levels, broad to specific: author_celltype
+      (Level 1, e.g. "Myonucleus") and author_cell_subtype (Level 2, e.g.
+      "Myonucleus-Type-I"), where every author_cell_subtype value must nest
+      under exactly one author_celltype value. Each level also carries a
+      companion ontology_* field mapping the free-text label to its nearest
+      Cell Ontology (CL) term, to support harmonization across datasets.
       Deeper levels are allowed but not required or modeled here.
     attributes:
-      celltype:
-        required: true
-        description: Broad cell-type label (Level 1), e.g. "Myonucleus", "FAP".
-        comments:
-          - "ontology_ref: CL (Cell Ontology), where mappable"
-      cell_subtype:
+      author_celltype:
         required: true
         description: >-
-          Specific subtype within celltype (Level 2), e.g.
-          "Myonucleus-Type-I" / "-Type-II". Must nest under exactly one celltype value.
+          Broad cell-type label (Level 1) as provided by the data
+          submitter, e.g. "Myonucleus", "Fibroblast".
+      ontology_celltype:
+        required: false
+        description: >-
+          Nearest matching Cell Ontology term for author_celltype, as a CL
+          curie (e.g. "CL:0000235" for macrophage). Use "CL:0000000" (the
+          root term "cell") if no closer match exists. Leave unset only if
+          no reasonable mapping attempt has been made yet.
+      author_cell_subtype:
+        required: true
+        description: >-
+          Specific subtype within author_celltype (Level 2) as provided by
+          the data submitter, e.g. "Myonucleus-Type-I" / "-Type-II". Must
+          nest under exactly one author_celltype value.
         comments:
-          - "ontology_ref: CL (Cell Ontology), where mappable"
-          - "nests_under: celltype"
+          - "nests_under: author_celltype"
+      ontology_cell_subtype:
+        required: false
+        description: >-
+          Nearest matching Cell Ontology term for author_cell_subtype, as a
+          CL curie, where one exists at this level of specificity (many
+          Level-2 subtypes will not have a distinct CL term).
       donor_id:
         required: true
         description: Stable identifier for the biological donor/sample of origin.
@@ -176,29 +376,50 @@ classes:
           Clinical group; use "Control" for unaffected donors. Baseline
           recommended values are Control/Disease — each tissue_profile refines
           this with its own disease_conditions list.
-      age:
-        range: float
-        unit:
-          ucum_code: a
-        description: Donor age in years.
+      age_band:
+        range: AgeBandEnum
+        description: >-
+          Donor age at collection, as a decade-wide band (e.g. "20-29")
+          rather than an exact value, to reduce re-identification risk.
       sex:
         range: SexEnum
+        description: Donor sex.
       assay:
         range: AssayEnum
         required: true
         description: Drives which percent.mt champion threshold applies.
+      tissue_type:
+        description: >-
+          Broad tissue type sampled, e.g. "skeletal_muscle", "tendon",
+          "bone_marrow" — should match a tissue_profiles key where the
+          dataset stays within one of the 7 musculoskeletal tissues. Mirrors
+          uns.schema.tissue at per-cell granularity, which matters for
+          datasets that combine samples from more than one tissue type.
       anatomical_site:
-        description: Sampling site within the tissue (tissue-specific vocabulary).
+        description: >-
+          Specific structure sampled within tissue_type — a named muscle,
+          tendon, joint, or disc level, e.g. "hamstring", "supraspinatus
+          (SSP) tendon", "L4-L5 intervertebral disc" (tissue-specific
+          vocabulary; see each TissueProfile).
+        comments:
+          - "nests_under: tissue_type"
+      microanatomy:
+        description: >-
+          Histological/structural subregion within anatomical_site, if
+          resolved, e.g. "myotendinous junction (MTJ)", "superficial zone",
+          "epiphysis", "enthesis/insertion site".
+        comments:
+          - "nests_under: anatomical_site"
       nCount_RNA:
         range: integer
-        required: true
+        required: false
         minimum_value: 0
-        description: Total UMIs per cell.
+        description: Total UMIs per cell. Recomputable from raw_counts if absent.
       nFeature_RNA:
         range: integer
-        required: true
+        required: false
         minimum_value: 0
-        description: Number of genes detected per cell.
+        description: Number of genes detected per cell. Recomputable from raw_counts if absent.
       percent_mt:
         range: float
         required: false
@@ -207,8 +428,38 @@ classes:
         unit:
           symbol: "%"
         description: >-
-          Percentage of counts from mitochondrial genes. Computable from
+          Percentage of counts from mitochondrial genes. Recomputable from
           var.mt if absent.
+      percent_ribo:
+        range: float
+        required: false
+        minimum_value: 0
+        maximum_value: 100
+        unit:
+          symbol: "%"
+        description: >-
+          Percentage of counts from ribosomal genes. Recomputable from
+          var.ribo if absent.
+      percent_hb:
+        range: float
+        required: false
+        minimum_value: 0
+        maximum_value: 100
+        unit:
+          symbol: "%"
+        description: >-
+          Percentage of counts from hemoglobin genes (blood contamination
+          proxy). Recomputable from var.hb if absent.
+      additional_metadata:
+        multivalued: true
+        inlined: true
+        description: >-
+          Free-form additional per-cell/donor fields beyond those defined
+          above, keyed by field name (e.g. {"BMI": "27.4", "smoking_status":
+          "former"}). Accepted and carried through, not validated against a
+          controlled vocabulary. Donor-level facts (e.g. BMI) are expected
+          to repeat identically across all of a donor's cells, the same way
+          donor_id/disease_status/age_band already do.
 
   # ---------------------------------------------------------------------------
   # 3. VAR — gene-level metadata (one row per gene)
@@ -233,6 +484,12 @@ classes:
       mt:
         range: boolean
         description: Flags mitochondrial genes (used to compute percent_mt).
+      ribo:
+        range: boolean
+        description: Flags ribosomal genes (used to compute percent_ribo).
+      hb:
+        range: boolean
+        description: Flags hemoglobin genes (used to compute percent_hb).
       highly_variable:
         range: boolean
         description: Highly variable genes, if computed.
@@ -241,13 +498,18 @@ classes:
   # 4. UNS — dataset-level provenance
   # ---------------------------------------------------------------------------
   DatasetProvenance:
-    description: uns.schema — provenance block naming this standard + version and any deviations.
+    description: >-
+      uns.schema (Seurat equivalent: object@misc, Seurat's general-purpose
+      slot for dataset-level metadata) — provenance block naming this
+      standard + version and any deviations.
     attributes:
       standard:
         required: true
         equals_string: mskkp-rnaseq-gold-standard
+        description: Name of this standard; must equal "mskkp-rnaseq-gold-standard".
       version:
         required: true
+        description: Version of this standard the dataset conforms to, e.g. "0.1.0-draft".
       tissue:
         required: true
         description: Tissue identifier, e.g. one of the tissue_profiles keys.
@@ -255,25 +517,102 @@ classes:
         range: GeneIdSystemEnum
         multivalued: true
         description: Which identifier system(s) var.gene_id uses.
-      X_holds:
-        range: XHoldsEnum
-        multivalued: true
-        description: What adata.X contains.
       certification:
         range: CertificationLevelEnum
         multivalued: true
         description: >-
           Tags describing how this dataset's content was produced/reviewed
-          (e.g. [ai_generated, human_reviewed]). Distinct from
-          TissueProfile.status, which tracks review of the champion's
-          cell-ontology block, not of any particular dataset.
-
-  DonorMetadataTable:
-    description: Optional donor-indexed summary table (one row per donor_id).
-    attributes:
-      donor_id:
-        identifier: true
+          (e.g. [ai_generated, human_reviewed]).
+      annotation_method:
+        range: AnnotationMethodEnum
         required: true
+        description: >-
+          How the author_celltype/author_cell_subtype calls in obs were
+          derived.
+      annotation_reference:
+        required: false
+        description: >-
+          Reference atlas/tool + version used, when annotation_method is
+          reference_mapping (e.g. "Azimuth, human skeletal muscle
+          reference v1"), or free-text elaboration when annotation_method
+          is other. Required in those two cases.
+
+  ExperimentalMetadata:
+    description: >-
+      uns.experimental (Seurat equivalent: object@misc) — sample-processing
+      and computational-pipeline provenance for the dataset as a whole.
+      These are exactly the kind of details that produce batch effects when
+      integrating across datasets, so they're required even though they
+      don't vary cell-by-cell.
+    attributes:
+      suspension_type:
+        range: SuspensionTypeEnum
+        required: true
+        description: Whether the library was made from whole cells or isolated nuclei.
+      library_platform:
+        required: false
+        description: >-
+          Library preparation platform/chemistry, e.g. "10x Chromium 3'
+          v3". Strongly recommended; paired with library_platform_ontology
+          where a matching term exists.
+      library_platform_ontology:
+        required: false
+        description: >-
+          EFO term matching library_platform, as a curie (e.g.
+          "EFO:0009922" for 10x 3' v3).
+      reference_genome:
+        required: true
+        description: Reference genome build used for alignment, e.g. "GRCh38".
+      alignment_software:
+        required: true
+        description: Alignment/quantification tool and version, e.g. "CellRanger v9.0.0".
+      introns_included:
+        range: boolean
+        required: true
+        description: Whether intronic reads were counted (particularly consequential for snRNA-seq).
+      tissue_collection_method:
+        range: TissueCollectionMethodEnum
+        required: false
+        description: How the tissue sample was obtained, e.g. surgical resection vs. postmortem.
+      storage_method:
+        range: StorageMethodEnum
+        required: false
+        description: How the sample was stored between collection and processing.
+      dissociation_method:
+        range: DissociationMethodEnum
+        required: false
+        description: Mechanical vs. enzymatic (e.g. collagenase) dissociation, or both.
+      sequencing_batch:
+        required: false
+        description: >-
+          Sequencing run/batch identifier. A key covariate for detecting
+          and correcting batch effects, especially when integrating across
+          donors or datasets.
+
+  StudyProvenance:
+    description: >-
+      uns.study (Seurat equivalent: object@misc) — authorship and
+      publication info for this dataset. Distinct from champion contact
+      info (see schemas/champions_roster.yaml), which tracks who curates a
+      tissue's block, not who produced a given dataset.
+    attributes:
+      authors:
+        multivalued: true
+        required: true
+        description: >-
+          Study authors, in publication/preprint author-list order (e.g.
+          ["Doe J", "Smith A"]).
+      publication_doi:
+        required: false
+        description: >-
+          DOI of the associated publication or preprint (e.g.
+          "10.1038/s41586-023-00000-0"), if one exists yet.
+      protocol_url:
+        required: false
+        description: >-
+          Link to a published protocol (e.g. a protocols.io entry)
+          describing the sample-processing/computational methods used, if
+          available.
 
   Dataset:
     description: A complete conforming RNA-seq dataset.
@@ -282,6 +621,7 @@ classes:
       object:
         range: ObjectSpec
         required: true
+        description: The dataset's serialized object — format and expression matrices.
       obs:
         range: CellObservation
         multivalued: true
@@ -298,12 +638,14 @@ classes:
         range: DatasetProvenance
         required: true
         description: uns.schema
-      donor_metadata:
-        range: DonorMetadataTable
-        multivalued: true
-        inlined_as_list: true
-        required: false
-        description: uns.donor_metadata, if supplied.
+      experimental_metadata:
+        range: ExperimentalMetadata
+        required: true
+        description: uns.experimental
+      study:
+        range: StudyProvenance
+        required: true
+        description: uns.study
 
   # ---------------------------------------------------------------------------
   # 5. TISSUE_PROFILES — one fill-in block per tissue (instance data; see
@@ -314,6 +656,7 @@ classes:
     attributes:
       name:
         required: true
+        description: Level-2 subtype name, e.g. "Myonucleus-Type-I".
       markers:
         multivalued: true
         description: >-
@@ -325,10 +668,12 @@ classes:
     attributes:
       name:
         required: true
+        description: Level-1 broad celltype name, e.g. "Myonucleus".
       subtypes:
         range: CellSubtypeDefinition
         multivalued: true
         inlined_as_list: true
+        description: This celltype's Level-2 subtypes.
 
   TissueProfile:
     description: One fill-in block for a musculoskeletal tissue.
@@ -336,23 +681,24 @@ classes:
       tissue_id:
         identifier: true
         required: true
+        description: Identifier for this tissue, e.g. "skeletal_muscle" (matches a champions_roster.yaml key).
       default_assay:
         range: AssayEnum
         required: true
-      status:
-        range: TissueProfileStatusEnum
-        required: true
+        description: This tissue's default assay (scRNA-seq or snRNA-seq).
       disease_conditions:
         multivalued: true
         description: Clinical groups in this tissue's cohort. Should include "Control".
       min_cells_per_subtype:
         range: integer
-        description: Optional override of the champion_criteria clusters_well_defined default (20).
+        description: Optional override of the champion_criteria celltype_well_defined default (20).
       cell_ontology:
         range: CellTypeDefinition
         multivalued: true
         inlined_as_list: true
+        description: This tissue's two-level cell-type ontology.
       notes:
+        description: Free-text champion notes about this tissue's profile block.
 
   TissueProfileCollection:
     description: All 7 musculoskeletal tissue blocks, keyed by tissue_id.

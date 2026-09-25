@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>mskkp-rnaseq-gold-standard &middot; specification</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#15272E; --ink-soft:#31474F; --muted:#647981; --faint:#8AA0A7;
+  --paper:#FBFCFC; --panel:#FFFFFF; --wash:#F0F5F6; --wash2:#E9F1F2;
+  --line:#DCE7E9; --line-soft:#EAF1F2;
+  --teal:#0E6E7E; --teal-deep:#0A4B57; --teal-tint:#E4F0F1;
+  --coral:#DD5C46; --coral-tint:#FBE7E2;
+  --green:#2C7F6E; --green-tint:#E1F0EC;
+  --amber:#B7791F; --amber-tint:#F7ECD6;
+  --sans:'Inter',system-ui,sans-serif;
+  --disp:'Space Grotesk','Inter',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--paper);
+  font-size:15.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+a{color:var(--teal);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:var(--mono);font-size:.86em;background:var(--wash);
+  padding:.08em .38em;border-radius:5px;color:var(--teal-deep);border:1px solid var(--line-soft)}
+
+/* top bar */
+.top{position:sticky;top:0;z-index:40;background:rgba(251,252,252,.9);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--line);height:60px;
+  display:flex;align-items:center;gap:16px;padding:0 22px}
+.brand{display:flex;align-items:center;gap:11px;font-family:var(--disp);font-weight:700;
+  letter-spacing:-.01em;color:var(--ink);font-size:16px}
+.brand .glyph{height:24px;padding:0 9px;border-radius:7px;background:var(--teal);
+  display:grid;place-items:center;color:#fff;font-size:11.5px;font-weight:700;flex:none;letter-spacing:.03em}
+.brand small{font-family:var(--mono);font-weight:500;color:var(--muted);font-size:11px;
+  border:1px solid var(--line);padding:2px 7px;border-radius:20px;letter-spacing:.02em}
+.top .spacer{flex:1}
+.top .tlink{font-size:13px;color:var(--muted)}
+.menu-btn{display:none;border:1px solid var(--line);background:#fff;border-radius:8px;
+  width:38px;height:34px;font-size:16px;cursor:pointer}
+
+/* layout */
+.wrap{display:grid;grid-template-columns:272px minmax(0,1fr) 210px;gap:0;
+  max-width:1360px;margin:0 auto}
+.side{border-right:1px solid var(--line);height:calc(100vh - 60px);position:sticky;top:60px;
+  overflow-y:auto;padding:22px 14px 60px}
+.side-inner{padding-right:4px}
+.nav-group{margin-bottom:20px}
+.nav-eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--faint);padding:0 10px;margin-bottom:7px;font-weight:500}
+.nav-link{display:block;padding:5px 10px;border-radius:7px;color:var(--ink-soft);
+  font-size:13.7px;border-left:2px solid transparent;margin:1px 0}
+.nav-link:hover{background:var(--wash);text-decoration:none;color:var(--ink)}
+.nav-link.active{color:var(--teal-deep);background:var(--teal-tint);
+  border-left-color:var(--teal);font-weight:600}
+
+/* content */
+.main{padding:40px 52px 120px;min-width:0}
+.toc{height:calc(100vh - 60px);position:sticky;top:60px;overflow-y:auto;
+  padding:40px 18px;border-left:1px solid var(--line)}
+.toc .toc-h{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--faint);margin-bottom:10px}
+.toc a{display:block;font-size:12.6px;color:var(--muted);padding:3px 0;line-height:1.35}
+.toc a.active{color:var(--teal-deep);font-weight:600}
+
+section{margin-bottom:52px;scroll-margin-top:78px}
+h1{font-family:var(--disp);font-size:38px;line-height:1.08;letter-spacing:-.02em;
+  margin:.1em 0 .35em;font-weight:700}
+h2{font-family:var(--disp);font-size:25px;letter-spacing:-.015em;font-weight:600;
+  margin:0 0 .5em;padding-bottom:.32em;border-bottom:1px solid var(--line)}
+h3{font-family:var(--disp);font-size:18px;font-weight:600;margin:1.6em 0 .5em}
+h4{font-family:var(--disp);font-size:15px;font-weight:600;margin:0 0 .4em}
+.eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--teal);font-weight:500;margin-bottom:6px}
+.lede{font-size:18px;line-height:1.5;color:var(--ink-soft);max-width:60ch}
+.muted{color:var(--muted);font-size:14px}
+.sub{font-family:var(--mono);font-size:.5em;font-weight:500;color:var(--muted);
+  vertical-align:middle;background:var(--wash);border:1px solid var(--line);
+  padding:3px 8px;border-radius:6px;margin-left:8px;letter-spacing:.02em}
+.count{font-family:var(--mono);font-size:11.5px;color:var(--muted);font-weight:500;margin-left:8px}
+
+/* badges */
+.badge{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:500;
+  padding:2px 9px;border-radius:20px;white-space:nowrap;letter-spacing:.01em}
+.badge.req{background:var(--coral-tint);color:#B23A25;border:1px solid #F1CFC7}
+.badge.rec{background:var(--amber-tint);color:#8A5A11;border:1px solid #E9D6AE}
+.badge.opt{background:var(--wash2);color:var(--muted);border:1px solid var(--line)}
+
+/* tables */
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+th{text-align:left;font-family:var(--mono);font-size:11px;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--muted);font-weight:500;padding:9px 12px;
+  background:var(--wash);border-bottom:1px solid var(--line)}
+td{padding:11px 12px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+table.fields td:first-child{white-space:nowrap}
+code.fld{background:var(--teal-tint);color:var(--teal-deep);border-color:#CBE2E4;font-weight:500}
+.typ{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.extra{margin-top:6px;font-size:12.5px;color:var(--muted);line-height:1.5}
+tbody tr:hover{background:var(--paper)}
+table.crit td:nth-child(3) code{background:transparent;border:none;padding:0;color:var(--ink-soft)}
+
+/* callouts / notes */
+.callout{background:var(--teal-tint);border:1px solid #CBE2E4;border-radius:12px;
+  padding:16px 18px;margin:22px 0}
+.callout p{margin:.3em 0 0;font-size:14.5px;color:var(--ink-soft)}
+.note{background:var(--wash);border:1px solid var(--line);border-left:3px solid var(--teal);
+  border-radius:8px;padding:12px 15px;margin:16px 0;font-size:13.8px;color:var(--ink-soft)}
+.note.warn{border-left-color:var(--amber);background:var(--amber-tint);border-color:#E9D6AE}
+.note.tissue-note{border-left-color:var(--coral);background:#fff;border-color:var(--line)}
+
+/* two tiers */
+.tiers{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}
+.tier{border:1px solid var(--line);border-radius:12px;padding:18px 20px;background:var(--panel)}
+.tier-h{font-family:var(--disp);font-weight:600;font-size:16px;color:var(--teal-deep);margin-bottom:6px}
+.tier p{font-size:14px;color:var(--ink-soft);margin:.2em 0 .8em}
+.tier-link{font-family:var(--mono);font-size:12.5px;font-weight:500}
+.tier-pill{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--teal);
+  background:var(--teal-tint);border:1px solid #CBE2E4;padding:2px 9px;border-radius:20px;
+  vertical-align:middle;margin-left:8px;letter-spacing:.02em}
+
+/* formats */
+.formats{display:flex;gap:14px;flex-wrap:wrap;margin:14px 0}
+.fmt{border:1px solid var(--line);border-radius:11px;padding:14px 18px;background:var(--panel);
+  min-width:180px}
+.fmt code{font-size:16px;background:none;border:none;padding:0;color:var(--teal-deep);font-weight:600}
+.fmt span{display:block;font-size:12.5px;color:var(--muted);margin-top:3px}
+.fmt em{display:inline-block;margin-top:8px;font-style:normal;font-family:var(--mono);font-size:10.5px;
+  letter-spacing:.04em;text-transform:uppercase;color:var(--teal);background:var(--teal-tint);
+  padding:2px 8px;border-radius:20px}
+
+/* levels */
+.levels{display:flex;align-items:stretch;gap:12px;margin:18px 0}
+.lvl{flex:1;border:1px solid var(--line);border-radius:11px;padding:14px 16px;background:var(--panel)}
+.lvl code{font-size:14px;font-weight:600}
+.lvl p{margin:.5em 0 0;font-size:13.3px;color:var(--ink-soft)}
+.lvl-tag{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--teal);background:var(--teal-tint);padding:2px 8px;
+  border-radius:20px;margin-right:8px}
+.lvl-arrow{align-self:center;color:var(--faint);font-size:22px}
+
+/* markers / chips */
+.mk{display:inline-block;font-family:var(--mono);font-size:11.5px;color:var(--teal-deep);
+  background:var(--teal-tint);border:1px solid #D3E6E7;border-radius:5px;padding:1px 7px;margin:2px 3px 2px 0}
+.chip,.cond{display:inline-block;font-size:12px;padding:2px 10px;border-radius:20px;margin:2px 4px 2px 0;
+  background:var(--wash2);border:1px solid var(--line);color:var(--ink-soft)}
+.cond{background:var(--coral-tint);border-color:#F1CFC7;color:#9C3320;font-family:var(--mono);font-size:11.5px}
+
+/* code blocks (worked examples) */
+.code-label{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--faint);margin:16px 0 5px}
+.codeblock{background:#0E2A30;border:1px solid #0A4B57;border-radius:10px;
+  padding:13px 16px;margin:0 0 6px;overflow-x:auto}
+.codeblock pre{font-family:var(--mono);font-size:12.7px;color:#CADEE0;margin:0;
+  white-space:pre;line-height:1.75}
+.codeblock .k{color:#7FD8C9}
+.codeblock .v{color:#E7C98A}
+.codeblock .c{color:#7E9AA0;font-style:italic}
+
+/* checklist */
+.checklist{list-style:none;padding:0;margin:14px 0}
+.checklist li{position:relative;padding:8px 8px 8px 34px;border-bottom:1px solid var(--line-soft);
+  font-size:14px;font-family:var(--mono);color:var(--ink-soft)}
+.checklist li:before{content:"\2713";position:absolute;left:8px;top:8px;color:var(--teal);font-weight:700}
+
+/* status badges */
+.sbadge{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:500;
+  padding:2px 10px;border-radius:20px;letter-spacing:.01em}
+.sbadge.draft{background:var(--amber-tint);color:#8A5A11;border:1px solid #E9D6AE}
+.sbadge.example{background:var(--teal-tint);color:var(--teal-deep);border:1px solid #CBE2E4}
+.sbadge.done{background:var(--green-tint);color:#1E5A4D;border:1px solid #BFE0D6}
+
+/* meta rows */
+.meta-row{display:flex;flex-wrap:wrap;gap:10px 26px;margin:14px 0;align-items:center}
+.meta-item{display:flex;align-items:center;gap:8px;font-size:13.5px}
+.ml{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint)}
+
+/* roster */
+.roster td{vertical-align:middle}
+.roster.mini{font-size:13px;margin:10px 0 18px}
+.ok{color:var(--green);font-weight:600;font-size:13px}
+.pending{color:var(--amber);font-size:13px;font-family:var(--mono)}
+
+/* ontology tree */
+.tree{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:12px 0}
+.t1{display:flex;align-items:center;gap:10px;background:var(--wash);padding:9px 15px;
+  border-top:1px solid var(--line)}
+.tree .t1:first-child{border-top:none}
+.t1-name{font-family:var(--disp);font-weight:600;font-size:14.5px;color:var(--teal-deep)}
+.t1-tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--faint)}
+.t2wrap{padding:4px 0}
+.t2{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;padding:6px 15px 6px 26px;
+  border-top:1px solid var(--line-soft)}
+.t2wrap .t2:first-child{border-top:none}
+.t2-name{font-family:var(--mono);font-size:13px;color:var(--ink);font-weight:500;min-width:180px}
+.mks{display:flex;flex-wrap:wrap}
+
+/* load state */
+#load-error{margin:16px 22px}
+#load-error code{white-space:nowrap}
+.skel{color:var(--faint);font-family:var(--mono);font-size:12.5px}
+
+@media(max-width:1180px){
+  .wrap{grid-template-columns:250px minmax(0,1fr)}
+  .toc{display:none}
+  .main{padding:36px 40px 120px}
+}
+@media(max-width:900px){
+  .wrap{grid-template-columns:1fr}
+  .menu-btn{display:block}
+  .side{position:fixed;top:60px;left:0;width:280px;background:var(--paper);z-index:35;
+    transform:translateX(-100%);transition:transform .22s ease;box-shadow:0 12px 40px rgba(0,0,0,.12)}
+  .side.open{transform:translateX(0)}
+  .main{padding:30px 22px 100px}
+  h1{font-size:31px}
+  .tiers,.levels{grid-template-columns:1fr;flex-direction:column}
+  .lvl-arrow{transform:rotate(90deg)}
+}
+</style></head>
+<body>
+<div id="load-error" class="note warn" style="display:none">
+  <strong>Couldn't render the schema.</strong> The data embedded in this page
+  (see <code>#embedded-schema-data</code> near the end of the file) failed to parse.
+  Regenerate this file with <code>python3 docs/build_docs.py</code> from the repo root.
+  <div id="load-error-detail" class="muted" style="margin-top:6px;font-family:var(--mono);font-size:12px"></div>
+</div>
+<header class="top">
+  <button class="menu-btn" id="menu" aria-label="Menu">&#9776;</button>
+  <div class="brand"><span class="glyph">MSKKP</span> RNA-seq gold-standard
+    <small id="hdr-version">v&hellip;</small></div>
+  <div class="spacer"></div>
+  <span class="tlink" id="hdr-tissue-count">&hellip;</span>
+</header>
+<div class="wrap">
+  <nav class="side" id="side"><div class="side-inner">
+<div class="nav-group"><div class="nav-eyebrow">Getting started</div>
+<a class="nav-link" href="#overview" data-t="overview">Overview</a>
+</div>
+<div class="nav-group"><div class="nav-eyebrow">Data object</div>
+<a class="nav-link" href="#object" data-t="object">Formats & matrices</a>
+</div>
+<div class="nav-group"><div class="nav-eyebrow">Cell metadata &middot; obs</div>
+<a class="nav-link" href="#annotations" data-t="annotations">Cell-type labels</a>
+<a class="nav-link" href="#donor" data-t="donor">Donor metadata</a>
+<a class="nav-link" href="#qc" data-t="qc">QC metrics</a>
+</div>
+<div class="nav-group"><div class="nav-eyebrow">Gene metadata &middot; var</div>
+<a class="nav-link" href="#var" data-t="var">Gene identifiers</a>
+</div>
+<div class="nav-group"><div class="nav-eyebrow">Provenance &middot; uns</div>
+<a class="nav-link" href="#uns" data-t="uns">Dataset info</a>
+</div>
+<div class="nav-group"><div class="nav-eyebrow">Conformance</div>
+<a class="nav-link" href="#required-structure" data-t="required-structure">Required structure</a>
+<a class="nav-link" href="#champion-criteria" data-t="champion-criteria">Champion criteria</a>
+</div>
+<div class="nav-group"><div class="nav-eyebrow">Tissue profiles</div>
+<div id="nav-tissue-links"><a class="nav-link skel" href="#tissue-overview">Loading&hellip;</a></div>
+</div>
+</div></nav>
+  <main class="main">
+<section id="overview">
+  <div class="eyebrow" id="overview-eyebrow">Specification</div>
+  <h1 id="overview-title">&hellip;</h1>
+  <p class="lede" id="overview-lede">Loading schema&hellip;</p>
+  <div class="meta-row">
+    <span class="meta-item"><span class="ml">Status</span><span class="sbadge draft" id="overview-status">&hellip;</span></span>
+    <span class="meta-item"><span class="ml">Applies to</span><code id="overview-applies-to">&hellip;</code></span>
+  </div>
+  <p class="muted" id="overview-maintainers"></p>
+
+  <div class="callout">
+    <h4>How to read this spec</h4>
+    <p>A conforming dataset is a single serialized object (an AnnData <code>.h5ad</code>, a
+    Seurat <code>.rds</code>, or a SingleCellExperiment <code>.rds</code>) that carries an
+    expression matrix plus structured metadata about every cell, gene, and donor. Each section
+    below documents one part of that object and marks every field as
+    <span class="badge req">Required</span> or <span class="badge opt">Optional</span>.
+    All of it is generated from the LinkML schema and companion data files in
+    <code>schemas/</code> &mdash; edit those, then regenerate this page with
+    <code>python3 docs/build_docs.py</code>, not this page directly.</p>
+  </div>
+
+  <h2>Two tiers of conformance</h2>
+  <p>The standard separates &ldquo;is this a valid dataset&rdquo; from &ldquo;is this good enough
+  to be the reference&rdquo;. Every field and rule below belongs to one of these tiers.</p>
+  <div class="tiers">
+    <div class="tier">
+      <div class="tier-h">1 &middot; Required structure</div>
+      <p>The minimum any dataset must contain to be <strong>valid</strong> against the standard.
+      A tissue may hold many conforming datasets.</p>
+      <a class="tier-link" href="#required-structure">See required structure &rarr;</a>
+    </div>
+    <div class="tier">
+      <div class="tier-h">2 &middot; Champion criteria</div>
+      <p>The higher quality bar a dataset must clear to be blessed as that tissue&rsquo;s single
+      <strong>reference</strong> (&ldquo;champion&rdquo;) dataset.</p>
+      <a class="tier-link" href="#champion-criteria">See champion criteria &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section id="object">
+  <h2>Data object &mdash; formats &amp; matrices</h2>
+  <p>A dataset is delivered as <strong>one</strong> serialized object. Three formats are accepted so
+  Python, Seurat, and Bioconductor users don't need to change toolkits.</p>
+  <div class="formats" id="object-formats"><span class="skel">Loading&hellip;</span></div>
+  <h3>Expression matrices</h3>
+  <p class="muted"><code>adata.X</code> is always raw, unnormalized counts &mdash; it's left untouched
+  by normalization/scaling. Every derived representation (normalized, scaled, ambient-corrected)
+  lives in a separate <code>layers[...]</code> entry.</p>
+  <table class="fields"><thead><tr><th>Field</th><th>Requirement</th><th>Type</th><th>Description</th></tr></thead>
+  <tbody id="object-matrix-table-body"><tr><td colspan="4" class="skel">Loading&hellip;</td></tr></tbody></table>
+  <h3>Filtering</h3>
+  <table class="fields"><thead><tr><th>Field</th><th>Requirement</th><th>Type</th><th>Description</th></tr></thead>
+  <tbody id="object-filter-table-body"><tr><td colspan="4" class="skel">Loading&hellip;</td></tr></tbody></table>
+  <h3>Embeddings <span class="sub">obsm</span></h3>
+  <p class="muted">At least one <code>pca</code> and one <code>umap</code> entry are required, each
+  with its own integration provenance &mdash; needed to visualize the dataset on the platform.</p>
+  <table class="fields"><thead><tr><th>Field</th><th>Requirement</th><th>Type</th><th>Description</th></tr></thead>
+  <tbody id="object-embeddings-table-body"><tr><td colspan="4" class="skel">Loading&hellip;</td></tr></tbody></table>
+</section>
+
+<section id="annotations">
+  <h2>Cell-type labels <span class="sub">obs</span></h2>
+  <p>Every cell carries <strong>two</strong> author-provided labels, from broad to specific. Think
+  <em>Country&nbsp;&rarr;&nbsp;City</em>: a broad category, then the specific subtype inside it.
+  Every Level&nbsp;2 label must sit under exactly one Level&nbsp;1 label. Each level also has a
+  companion <code>ontology_*</code> field mapping the free-text label to its nearest Cell Ontology
+  (CL) term, to support harmonization across datasets.</p>
+  <div class="levels">
+    <div class="lvl"><span class="lvl-tag">Level 1</span><code>author_celltype</code>
+      <p>The broad category &mdash; the general <em>kind</em> of cell, e.g.
+      <span class="mk">Myonucleus</span> <span class="mk">Immune</span>.</p></div>
+    <div class="lvl-arrow">&rarr;</div>
+    <div class="lvl"><span class="lvl-tag">Level 2</span><code>author_cell_subtype</code>
+      <p>The specific subtype inside it, e.g.
+      <span class="mk">Myonucleus-Type-I</span> <span class="mk">Macrophage</span>.</p></div>
+  </div>
+  <table class="fields"><thead><tr><th>Field</th><th>Requirement</th><th>Type</th><th>Description</th></tr></thead>
+  <tbody id="annotations-table-body"><tr><td colspan="4" class="skel">Loading&hellip;</td></tr></tbody></table>
+  <p class="muted">Deeper levels (Level 3 and beyond) are allowed but not required. How these labels
+  were derived (clustering + manual review vs. reference mapping, etc.) is recorded once per
+  dataset in <a href="#uns"><code>uns.schema.annotation_method</code></a>, not repeated here.</p>
+</section>
+
+<section id="donor">
+  <h2>Donor metadata <span class="sub">obs</span></h2>
+  <p>Donor- and sample-level attributes recorded per cell. Fields beyond those listed below are
+  accepted via <code>additional_metadata</code> and carried through, not validated against a
+  controlled vocabulary.</p>
+  <table class="fields"><thead><tr><th>Field</th><th>Requirement</th><th>Type</th><th>Description</th></tr></thead>
+  <tbody id="donor-table-body"><tr><td colspan="4" class="skel">Loading&hellip;</td></tr></tbody></table>
+</section>
+
+<section id="qc">
+  <h2>QC metrics <span class="sub">obs</span></h2>
+  <p class="muted">All QC metrics below are optional &mdash; they're easily recomputed from the raw
+  counts matrix (and the matching <code>var</code> gene flag) if not supplied directly.</p>
+  <table class="fields"><thead><tr><th>Field</th><th>Requirement</th><th>Type</th><th>Description</th></tr></thead>
+  <tbody id="qc-table-body"><tr><td colspan="4" class="skel">Loading&hellip;</td></tr></tbody></table>
+</section>
+
+<section id="var">
+  <h2>Gene identifiers <span class="sub">var</span></h2>
+  <p>Genes are keyed by a <strong>stable identifier</strong>, not by symbol. The readable English
+  symbol travels alongside. Use <code>gene_id</code> as the canonical key everywhere it matters
+  &mdash; matching genes and merging datasets across tissues.</p>
+  <table class="fields"><thead><tr><th>Field</th><th>Requirement</th><th>Type</th><th>Description</th></tr></thead>
+  <tbody id="var-table-body"><tr><td colspan="4" class="skel">Loading&hellip;</td></tr></tbody></table>
+</section>
+
+<section id="uns">
+  <h2>Dataset info <span class="sub">uns</span></h2>
+  <p>Dataset-level provenance, split into three blocks. In Seurat, all three map to entries in
+  <code>object@misc</code> &mdash; Seurat's general-purpose slot for dataset-level metadata.</p>
+
+  <h3>Schema conformance <span class="sub">uns.schema</span></h3>
+  <table class="fields"><thead><tr><th>Field</th><th>Requirement</th><th>Type</th><th>Description</th></tr></thead>
+  <tbody id="uns-schema-table-body"><tr><td colspan="4" class="skel">Loading&hellip;</td></tr></tbody></table>
+
+  <h3>Experimental metadata <span class="sub">uns.experimental</span></h3>
+  <p class="muted">Sample-processing and computational-pipeline details. These don't vary
+  cell-by-cell, but they're exactly what produces batch effects when integrating across datasets.</p>
+  <table class="fields"><thead><tr><th>Field</th><th>Requirement</th><th>Type</th><th>Description</th></tr></thead>
+  <tbody id="uns-experimental-table-body"><tr><td colspan="4" class="skel">Loading&hellip;</td></tr></tbody></table>
+
+  <h3>Study &amp; publication <span class="sub">uns.study</span></h3>
+  <p class="muted">Distinct from champion contact info (tracked separately in
+  <code>champions_roster.yaml</code>), which records who curates a tissue's block, not who produced
+  a given dataset.</p>
+  <table class="fields"><thead><tr><th>Field</th><th>Requirement</th><th>Type</th><th>Description</th></tr></thead>
+  <tbody id="uns-study-table-body"><tr><td colspan="4" class="skel">Loading&hellip;</td></tr></tbody></table>
+
+  <div class="code-label">Example &middot; a filled-in uns.schema (skeletal-muscle dataset)</div><div class="codeblock"><pre><span class="k">standard:</span>          <span class="v">mskkp-rnaseq-gold-standard</span>
+<span class="k">version:</span>           <span class="v">0.1.0-draft</span>
+<span class="k">tissue:</span>            <span class="v">skeletal_muscle</span>
+<span class="k">gene_id_system:</span>    <span class="v">[ensembl]</span>  <span class="c"># hgnc | ensembl — this set keys genes by Ensembl IDs</span>
+<span class="k">certification:</span>     <span class="v">[ai_generated, human_reviewed]</span>  <span class="c"># AI-drafted annotations, later confirmed by a human</span>
+<span class="k">annotation_method:</span> <span class="v">clustering_manual</span></pre></div>
+  <div class="code-label">The same block set in Python / AnnData</div><div class="codeblock"><pre>adata.uns[<span class="v">"schema"</span>] = {
+    <span class="k">"standard"</span>:          <span class="v">"mskkp-rnaseq-gold-standard"</span>,
+    <span class="k">"version"</span>:           <span class="v">"0.1.0-draft"</span>,
+    <span class="k">"tissue"</span>:            <span class="v">"skeletal_muscle"</span>,
+    <span class="k">"gene_id_system"</span>:    <span class="v">["ensembl"]</span>,
+    <span class="k">"certification"</span>:     <span class="v">["ai_generated", "human_reviewed"]</span>,
+    <span class="k">"annotation_method"</span>: <span class="v">"clustering_manual"</span>,
+}  <span class="c"># Seurat equivalent: obj@misc$schema</span></pre></div>
+</section>
+
+<section id="required-structure">
+  <h2>Required structure <span class="tier-pill">Tier 1</span></h2>
+  <p>The minimum for a dataset to be <strong>valid</strong> against the standard. All must hold.
+  Derived from every <code>required: true</code> slot in the LinkML schema.</p>
+  <ul class="checklist" id="required-structure-list"><li class="skel">Loading&hellip;</li></ul>
+</section>
+
+<section id="champion-criteria">
+  <h2>Champion criteria <span class="tier-pill">Tier 2</span></h2>
+  <p>The extra bar to qualify as a tissue&rsquo;s reference dataset. Every
+  <span class="badge req">Required</span> rule must pass; <span class="badge rec">Recommended</span> rules are reported but do not block.
+  Note the two mitochondrial rules are gated by the <code>assay</code> field. These are aggregate
+  checks over obs that LinkML itself can't express &mdash; see
+  <code>schemas/validate_champion_criteria.py</code> for the runnable checker.</p>
+  <table class="fields crit"><thead><tr><th>Rule</th><th>What it checks</th><th>Test</th><th>Applies when</th><th>Status</th></tr></thead>
+  <tbody id="champion-criteria-body"><tr><td colspan="5" class="skel">Loading&hellip;</td></tr></tbody></table>
+</section>
+
+<section id="tissue-overview">
+  <h2>Tissue profiles</h2>
+  <p>The only tissue-specific part of the standard: one block per musculoskeletal tissue, owned by that
+  tissue&rsquo;s champion. Each defines the assay, disease conditions, and the two-level cell
+  ontology for that tissue.</p>
+  <div class="note warn">
+    <strong>Draft seeds &mdash; review required.</strong> Skeletal muscle is a fully worked example.
+    The other six blocks are pre-seeded with well-established starter populations only to show the
+    pattern. Each champion must review their block line by line &mdash; especially the
+    <strong>disease conditions</strong> and the <strong>cell ontology</strong> (celltypes, subtypes,
+    and markers). Seeded markers are shown by symbol and must be recorded as <code>gene_id</code>s
+    in the delivered data.
+  </div>
+  <table class="roster"><thead><tr><th>Tissue</th><th>Champion(s)</th><th>Contact</th><th>Assay</th><th>Confirmed</th></tr></thead>
+  <tbody id="tissue-roster-body"><tr><td colspan="5" class="skel">Loading&hellip;</td></tr></tbody></table>
+</section>
+
+<div id="tissue-sections"></div>
+
+</main>
+  <aside class="toc"><div class="toc-h">On this page</div>
+<a href="#overview">Overview</a>
+<a href="#object">Formats & matrices</a>
+<a href="#annotations">Cell-type labels</a>
+<a href="#donor">Donor metadata</a>
+<a href="#qc">QC metrics</a>
+<a href="#var">Gene identifiers</a>
+<a href="#uns">Dataset info</a>
+<a href="#required-structure">Required structure</a>
+<a href="#champion-criteria">Champion criteria</a>
+<div id="toc-tissue-links"><a href="#tissue-overview">Overview & roster</a></div>
+</aside>
+</div>
+<script type="application/json" id="embedded-schema-data">{"schema":{"id":"https://github.com/broadinstitute/mskkp-tissue-champion-initiative/schemas/mskkp_rnaseq_schema","name":"mskkp-rnaseq-gold-standard","title":"MSKKP Tissue Champion RNA-seq gold-standard schema","description":"Standard for single-cell / single-nucleus RNA-seq reference datasets across musculoskeletal tissue types. Defines object layout, required metadata, and the quality thresholds that qualify a dataset as a tissue \"champion\".","version":"0.1.0-draft","status":"draft","comments":["initiative_lead: Jeremy Arbesfeld (Knowledge Portal Network)","schema_conceptualized_by: Luca Tucciarone (Gaulton Lab)"],"license":"https://creativecommons.org/licenses/by/4.0/","prefixes":{"linkml":"https://w3id.org/linkml/","mskkp":"https://github.com/broadinstitute/mskkp-tissue-champion-initiative/","CL":"http://purl.obolibrary.org/obo/CL_","HGNC":"http://identifiers.org/hgnc/","ENSEMBL":"http://identifiers.org/ensembl/","EFO":"http://identifiers.org/efo/"},"default_prefix":"mskkp","default_range":"string","imports":["linkml:types"],"enums":{"FileFormatEnum":{"description":"Serialized object formats a conforming dataset may be delivered as.","permissible_values":{"h5ad":{"description":"AnnData (Python) — preferred."},"rds":{"description":"Seurat object (R), serialized as .rds — accepted equivalent."},"sce":{"description":"SingleCellExperiment (R/Bioconductor), serialized as .rds — accepted equivalent. Distinguish from the Seurat `rds` value in accompanying documentation, since both share the .rds extension."}}},"AssayEnum":{"description":"Single-cell vs single-nucleus RNA-seq. Drives the percent.mt threshold.","permissible_values":{"scRNA-seq":{"description":"Single-cell RNA-seq."},"snRNA-seq":{"description":"Single-nucleus RNA-seq."}}},"SuspensionTypeEnum":{"description":"Whether the sequenced suspension was made of whole cells or isolated nuclei. Usually implied by assay (scRNA-seq -> cell, snRNA-seq -> nucleus) but requested explicitly since a handful of protocols mix the two (e.g. nuclei recovered from a cell suspension).","permissible_values":{"cell":null,"nucleus":null,"unknown":null}},"TissueCollectionMethodEnum":{"description":"How the tissue sample was obtained from the donor.","permissible_values":{"surgery":{"description":"Surgical resection/excision from a living donor."},"postmortem":{"description":"Autopsy/postmortem collection."},"biopsy":{"description":"Needle or punch biopsy from a living donor."},"other":{"description":"Any other collection route."}}},"StorageMethodEnum":{"description":"How the sample was stored between collection and processing.","permissible_values":{"fresh":{"description":"Processed fresh, not frozen."},"frozen_minus70":{"description":"Frozen and stored at approximately -70C to -80C."},"frozen_liquid_nitrogen":{"description":"Frozen and stored in liquid nitrogen (vapor or immersion)."},"other":{"description":"Any other storage method."}}},"DissociationMethodEnum":{"description":"How the tissue was dissociated into a single-cell/nucleus suspension.","permissible_values":{"mechanical":{"description":"Mechanical dissociation only (e.g. mincing, dounce homogenization)."},"enzymatic_collagenase":{"description":"Enzymatic digestion using collagenase (or similar)."},"combined_mechanical_enzymatic":{"description":"Combined mechanical and enzymatic dissociation."},"other":{"description":"Any other dissociation method."}}},"SexEnum":{"description":"Donor sex.","permissible_values":{"M":null,"F":null,"unknown":null}},"AgeBandEnum":{"description":"Decade-wide donor age bands, used instead of exact age to reduce re-identification risk. Ages 90 and above are bundled into a single band, consistent with common de-identification practice for long-tail-rare ages.","permissible_values":{"0-9":null,"10-19":null,"20-29":null,"30-39":null,"40-49":null,"50-59":null,"60-69":null,"70-79":null,"80-89":null,"90+":null,"unknown":null}},"GeneIdSystemEnum":{"description":"Identifier system used as the gene key in var.gene_id.","permissible_values":{"hgnc":null,"ensembl":null}},"FilterStatusEnum":{"description":"Whether the cells represented in obs/the matrices have been filtered against a QC threshold (e.g. min genes/UMIs per cell), left as the unfiltered raw droplet output, or both are supplied. \"Raw\" in raw_counts refers to unnormalized counts, not filtering status — the two are independent and must both be declared.","permissible_values":{"filtered":{"description":"Only cells passing the submitter's QC threshold are included. filtering_criteria must describe that threshold."},"unfiltered":{"description":"All droplets/barcodes are included, prior to any cell-calling QC filter."},"both":{"description":"The dataset supplies both a filtered and an unfiltered version (e.g. as separate objects or layers); filtering_criteria describes the filtered version's threshold."}}},"EmbeddingTypeEnum":{"description":"Low-dimensional embeddings requested for platform visualization.","permissible_values":{"pca":{"description":"Linear PCA embedding, typically the input to downstream integration/UMAP."},"umap":{"description":"2D UMAP embedding used for visualization."}}},"CertificationLevelEnum":{"description":"How this dataset's content (annotations, QC metrics, cell-type calls) was produced and reviewed. Not mutually exclusive — a dataset can carry more than one tag, e.g. ai_generated + human_reviewed if a human confirmed AI-drafted annotations.","permissible_values":{"ai_generated":{"description":"Annotations/metadata were produced or drafted by an AI system, not yet reviewed by a human."},"human_reviewed":{"description":"A human has reviewed and confirms the annotations/metadata."},"community_validated":{"description":"Reviewed and endorsed by the tissue's champion community — meets champion_criteria and the tissue champion has signed off."}}},"AnnotationMethodEnum":{"description":"How cell-type labels (author_celltype/author_cell_subtype) were derived.","permissible_values":{"clustering_manual":{"description":"Unsupervised clustering followed by manual, marker-based annotation of clusters."},"reference_mapping":{"description":"Automated label transfer from a reference atlas/dataset (e.g. Azimuth, scANVI, CellTypist, SingleR). annotation_reference must name the reference + tool."},"marker_based":{"description":"Direct per-cell marker-gene scoring or rule-based classification, without a clustering step."},"other":{"description":"Any other method; annotation_reference must elaborate."}}}},"classes":{"ObjectSpec":{"description":"The serialized object a conforming dataset is delivered as.","attributes":{"format":{"range":"FileFormatEnum","required":true,"description":"Serialization format of the delivered object."},"raw_counts":{"range":"boolean","required":true,"description":"Unnormalized UMI counts, integer-valued (stored as numpy.float32 per HCA/cellxgene convention, not int, for h5ad compatibility). X is left untouched by normalization/scaling and always holds this matrix — there is no separate flag for where it lives.","comments":["location_h5ad: adata.X, scipy.sparse.csr_matrix, dtype numpy.float32 with integer values","location_seurat: obj[[\"RNA\"]]@counts"]},"normalized":{"range":"boolean","required":true,"description":"Log-normalized expression, derived from X, Seurat \"data\" slot equivalent (dtype: float). Default method LogNormalize, scale factor 10000.","comments":["location_h5ad: adata.layers[\"normalized\"], scipy.sparse.csr_matrix, dtype numpy.float32","location_seurat: obj[[\"RNA\"]]@data"]},"scaled":{"range":"boolean","required":false,"description":"Scaled expression (e.g. centered/z-scored), Seurat \"scale.data\" slot equivalent, derived from the normalized layer. Only available for projects processed before 2026-04-28 — omit for projects processed on or after that date.","comments":["location_h5ad: adata.layers[\"scaled\"]","location_seurat: obj[[\"RNA\"]]@scale.data"]},"ambient_corrected":{"range":"boolean","required":false,"description":"Optional ambient RNA-corrected counts matrix (e.g. CellBender or SoupX output), derived from X. Not required, but strongly encouraged for MSK tissues, where ambient contamination has been a critical confounder. If supplied, ambient_correction_method must be set.","comments":["location_h5ad: adata.layers[\"ambient_corrected\"]","location_seurat: obj[[\"RNA\"]]@misc$ambient_corrected, or an added assay"]},"ambient_correction_method":{"required":false,"description":"Tool and version/parameters used to produce ambient_corrected (e.g. \"CellBender remove-background v0.3.0, default priors\" or \"SoupX autoEstCont\"). Required if ambient_corrected is true."},"filter_status":{"range":"FilterStatusEnum","required":true,"description":"Whether obs/the matrices above represent filtered cells, unfiltered droplets, or both. See FilterStatusEnum."},"filtering_criteria":{"required":false,"description":"Free-text description of the QC threshold(s) used to produce the filtered cell set (e.g. \"cells with >=300 genes and >=500 UMIs retained; empty droplets called via EmptyDrops\"). Required when filter_status is filtered or both."},"embeddings":{"range":"EmbeddingSpec","multivalued":true,"inlined_as_list":true,"required":true,"description":"obsm embeddings supplied for platform visualization. Must include at least one pca and one umap entry."}}},"EmbeddingSpec":{"description":"One obsm entry (e.g. adata.obsm[\"X_umap\"]) and the provenance needed to interpret it — in particular whether/how batch integration was applied before it was computed.","attributes":{"type":{"range":"EmbeddingTypeEnum","required":true,"description":"Which embedding this entry is — pca or umap."},"integration_method":{"required":false,"description":"Integration method applied before computing this embedding, if any (e.g. \"Harmony\", \"scVI\", \"Seurat CCA\"). Omit or leave unset if no integration was performed (e.g. single-donor dataset)."},"integration_params":{"required":false,"description":"Key parameters/covariates used for integration (e.g. \"batch_key: donor_id; theta: 2\" for Harmony). Required if integration_method is set."},"location":{"required":false,"description":"Where this embedding is stored, if not the obvious default.","comments":["location_h5ad_default: adata.obsm[\"X_pca\"] / adata.obsm[\"X_umap\"]","location_seurat_default: obj[[\"pca\"]] / obj[[\"umap\"]]"]}}},"CellObservation":{"description":"One row of obs (Seurat equivalent: one row of object@meta.data): metadata for a single cell. Every cell gets two required author-provided annotation levels, broad to specific: author_celltype (Level 1, e.g. \"Myonucleus\") and author_cell_subtype (Level 2, e.g. \"Myonucleus-Type-I\"), where every author_cell_subtype value must nest under exactly one author_celltype value. Each level also carries a companion ontology_* field mapping the free-text label to its nearest Cell Ontology (CL) term, to support harmonization across datasets. Deeper levels are allowed but not required or modeled here.","attributes":{"author_celltype":{"required":true,"description":"Broad cell-type label (Level 1) as provided by the data submitter, e.g. \"Myonucleus\", \"Fibroblast\"."},"ontology_celltype":{"required":false,"description":"Nearest matching Cell Ontology term for author_celltype, as a CL curie (e.g. \"CL:0000235\" for macrophage). Use \"CL:0000000\" (the root term \"cell\") if no closer match exists. Leave unset only if no reasonable mapping attempt has been made yet."},"author_cell_subtype":{"required":true,"description":"Specific subtype within author_celltype (Level 2) as provided by the data submitter, e.g. \"Myonucleus-Type-I\" / \"-Type-II\". Must nest under exactly one author_celltype value.","comments":["nests_under: author_celltype"]},"ontology_cell_subtype":{"required":false,"description":"Nearest matching Cell Ontology term for author_cell_subtype, as a CL curie, where one exists at this level of specificity (many Level-2 subtypes will not have a distinct CL term)."},"donor_id":{"required":true,"description":"Stable identifier for the biological donor/sample of origin."},"disease_status":{"required":false,"description":"Clinical group; use \"Control\" for unaffected donors. Baseline recommended values are Control/Disease — each tissue_profile refines this with its own disease_conditions list."},"age_band":{"range":"AgeBandEnum","description":"Donor age at collection, as a decade-wide band (e.g. \"20-29\") rather than an exact value, to reduce re-identification risk."},"sex":{"range":"SexEnum","description":"Donor sex."},"assay":{"range":"AssayEnum","required":true,"description":"Drives which percent.mt champion threshold applies."},"tissue_type":{"description":"Broad tissue type sampled, e.g. \"skeletal_muscle\", \"tendon\", \"bone_marrow\" — should match a tissue_profiles key where the dataset stays within one of the 7 musculoskeletal tissues. Mirrors uns.schema.tissue at per-cell granularity, which matters for datasets that combine samples from more than one tissue type."},"anatomical_site":{"description":"Specific structure sampled within tissue_type — a named muscle, tendon, joint, or disc level, e.g. \"hamstring\", \"supraspinatus (SSP) tendon\", \"L4-L5 intervertebral disc\" (tissue-specific vocabulary; see each TissueProfile).","comments":["nests_under: tissue_type"]},"microanatomy":{"description":"Histological/structural subregion within anatomical_site, if resolved, e.g. \"myotendinous junction (MTJ)\", \"superficial zone\", \"epiphysis\", \"enthesis/insertion site\".","comments":["nests_under: anatomical_site"]},"nCount_RNA":{"range":"integer","required":false,"minimum_value":0,"description":"Total UMIs per cell. Recomputable from raw_counts if absent."},"nFeature_RNA":{"range":"integer","required":false,"minimum_value":0,"description":"Number of genes detected per cell. Recomputable from raw_counts if absent."},"percent_mt":{"range":"float","required":false,"minimum_value":0,"maximum_value":100,"unit":{"symbol":"%"},"description":"Percentage of counts from mitochondrial genes. Recomputable from var.mt if absent."},"percent_ribo":{"range":"float","required":false,"minimum_value":0,"maximum_value":100,"unit":{"symbol":"%"},"description":"Percentage of counts from ribosomal genes. Recomputable from var.ribo if absent."},"percent_hb":{"range":"float","required":false,"minimum_value":0,"maximum_value":100,"unit":{"symbol":"%"},"description":"Percentage of counts from hemoglobin genes (blood contamination proxy). Recomputable from var.hb if absent."},"additional_metadata":{"multivalued":true,"inlined":true,"description":"Free-form additional per-cell/donor fields beyond those defined above, keyed by field name (e.g. {\"BMI\": \"27.4\", \"smoking_status\": \"former\"}). Accepted and carried through, not validated against a controlled vocabulary. Donor-level facts (e.g. BMI) are expected to repeat identically across all of a donor's cells, the same way donor_id/disease_status/age_band already do."}}},"GeneVariable":{"description":"One row of var: metadata for a single gene, keyed by a stable identifier (gene_id), not by symbol.","attributes":{"gene_id":{"identifier":true,"required":true,"description":"Stable gene identifier used as the gene key — either an HGNC ID (e.g. \"HGNC:7577\") or an Ensembl gene ID (e.g. \"ENSG00000092054\"). Which system is used is recorded in uns.schema.gene_id_system."},"gene_symbol":{"required":true,"description":"Human-readable English symbol associated with the gene_id (e.g. \"MYH7\"). For readability only — gene_id is the canonical key."},"mt":{"range":"boolean","description":"Flags mitochondrial genes (used to compute percent_mt)."},"ribo":{"range":"boolean","description":"Flags ribosomal genes (used to compute percent_ribo)."},"hb":{"range":"boolean","description":"Flags hemoglobin genes (used to compute percent_hb)."},"highly_variable":{"range":"boolean","description":"Highly variable genes, if computed."}}},"DatasetProvenance":{"description":"uns.schema (Seurat equivalent: object@misc, Seurat's general-purpose slot for dataset-level metadata) — provenance block naming this standard + version and any deviations.","attributes":{"standard":{"required":true,"equals_string":"mskkp-rnaseq-gold-standard","description":"Name of this standard; must equal \"mskkp-rnaseq-gold-standard\"."},"version":{"required":true,"description":"Version of this standard the dataset conforms to, e.g. \"0.1.0-draft\"."},"tissue":{"required":true,"description":"Tissue identifier, e.g. one of the tissue_profiles keys."},"gene_id_system":{"range":"GeneIdSystemEnum","multivalued":true,"description":"Which identifier system(s) var.gene_id uses."},"certification":{"range":"CertificationLevelEnum","multivalued":true,"description":"Tags describing how this dataset's content was produced/reviewed (e.g. [ai_generated, human_reviewed])."},"annotation_method":{"range":"AnnotationMethodEnum","required":true,"description":"How the author_celltype/author_cell_subtype calls in obs were derived."},"annotation_reference":{"required":false,"description":"Reference atlas/tool + version used, when annotation_method is reference_mapping (e.g. \"Azimuth, human skeletal muscle reference v1\"), or free-text elaboration when annotation_method is other. Required in those two cases."}}},"ExperimentalMetadata":{"description":"uns.experimental (Seurat equivalent: object@misc) — sample-processing and computational-pipeline provenance for the dataset as a whole. These are exactly the kind of details that produce batch effects when integrating across datasets, so they're required even though they don't vary cell-by-cell.","attributes":{"suspension_type":{"range":"SuspensionTypeEnum","required":true,"description":"Whether the library was made from whole cells or isolated nuclei."},"library_platform":{"required":false,"description":"Library preparation platform/chemistry, e.g. \"10x Chromium 3' v3\". Strongly recommended; paired with library_platform_ontology where a matching term exists."},"library_platform_ontology":{"required":false,"description":"EFO term matching library_platform, as a curie (e.g. \"EFO:0009922\" for 10x 3' v3)."},"reference_genome":{"required":true,"description":"Reference genome build used for alignment, e.g. \"GRCh38\"."},"alignment_software":{"required":true,"description":"Alignment/quantification tool and version, e.g. \"CellRanger v9.0.0\"."},"introns_included":{"range":"boolean","required":true,"description":"Whether intronic reads were counted (particularly consequential for snRNA-seq)."},"tissue_collection_method":{"range":"TissueCollectionMethodEnum","required":false,"description":"How the tissue sample was obtained, e.g. surgical resection vs. postmortem."},"storage_method":{"range":"StorageMethodEnum","required":false,"description":"How the sample was stored between collection and processing."},"dissociation_method":{"range":"DissociationMethodEnum","required":false,"description":"Mechanical vs. enzymatic (e.g. collagenase) dissociation, or both."},"sequencing_batch":{"required":false,"description":"Sequencing run/batch identifier. A key covariate for detecting and correcting batch effects, especially when integrating across donors or datasets."}}},"StudyProvenance":{"description":"uns.study (Seurat equivalent: object@misc) — authorship and publication info for this dataset. Distinct from champion contact info (see schemas/champions_roster.yaml), which tracks who curates a tissue's block, not who produced a given dataset.","attributes":{"authors":{"multivalued":true,"required":true,"description":"Study authors, in publication/preprint author-list order (e.g. [\"Doe J\", \"Smith A\"])."},"publication_doi":{"required":false,"description":"DOI of the associated publication or preprint (e.g. \"10.1038/s41586-023-00000-0\"), if one exists yet."},"protocol_url":{"required":false,"description":"Link to a published protocol (e.g. a protocols.io entry) describing the sample-processing/computational methods used, if available."}}},"Dataset":{"description":"A complete conforming RNA-seq dataset.","tree_root":true,"attributes":{"object":{"range":"ObjectSpec","required":true,"description":"The dataset's serialized object — format and expression matrices."},"obs":{"range":"CellObservation","multivalued":true,"inlined_as_list":true,"required":true,"description":"One entry per cell."},"var":{"range":"GeneVariable","multivalued":true,"inlined_as_list":true,"required":true,"description":"One entry per gene."},"schema_provenance":{"range":"DatasetProvenance","required":true,"description":"uns.schema"},"experimental_metadata":{"range":"ExperimentalMetadata","required":true,"description":"uns.experimental"},"study":{"range":"StudyProvenance","required":true,"description":"uns.study"}}},"CellSubtypeDefinition":{"description":"One Level-2 subtype and its marker genes, within a CellTypeDefinition.","attributes":{"name":{"required":true,"description":"Level-2 subtype name, e.g. \"Myonucleus-Type-I\"."},"markers":{"multivalued":true,"description":"Marker genes by gene_id (HGNC or Ensembl), matching the identifier system used as the gene key in var.gene_id."}}},"CellTypeDefinition":{"description":"One Level-1 broad celltype and its Level-2 subtypes.","attributes":{"name":{"required":true,"description":"Level-1 broad celltype name, e.g. \"Myonucleus\"."},"subtypes":{"range":"CellSubtypeDefinition","multivalued":true,"inlined_as_list":true,"description":"This celltype's Level-2 subtypes."}}},"TissueProfile":{"description":"One fill-in block for a musculoskeletal tissue.","attributes":{"tissue_id":{"identifier":true,"required":true,"description":"Identifier for this tissue, e.g. \"skeletal_muscle\" (matches a champions_roster.yaml key)."},"default_assay":{"range":"AssayEnum","required":true,"description":"This tissue's default assay (scRNA-seq or snRNA-seq)."},"disease_conditions":{"multivalued":true,"description":"Clinical groups in this tissue's cohort. Should include \"Control\"."},"min_cells_per_subtype":{"range":"integer","description":"Optional override of the champion_criteria celltype_well_defined default (20)."},"cell_ontology":{"range":"CellTypeDefinition","multivalued":true,"inlined_as_list":true,"description":"This tissue's two-level cell-type ontology."},"notes":{"description":"Free-text champion notes about this tissue's profile block."}}},"TissueProfileCollection":{"description":"All 7 musculoskeletal tissue blocks, keyed by tissue_id.","attributes":{"tissue_profiles":{"range":"TissueProfile","multivalued":true,"inlined":true,"description":"Keyed by tissue_id (cartilage, tendon, bone_marrow, bone, ivd, synovium, skeletal_muscle)."}}}}},"tissueData":{"tissue_profiles":{"cartilage":{"tissue_id":"cartilage","default_assay":"snRNA-seq","disease_conditions":["Control","Osteoarthritis"],"min_cells_per_subtype":20,"cell_ontology":[{"name":"Chondrocyte","subtypes":[{"name":"Chondrocyte-Superficial","markers":["PRG4","CILP"]},{"name":"Chondrocyte-Homeostatic","markers":["COL2A1","ACAN","SOX9"]},{"name":"Chondrocyte-Hypertrophic","markers":["COL10A1","IBSP"]}]},{"name":"Fibrochondrocyte","subtypes":[{"name":"Fibrochondrocyte","markers":["COL1A1","COL3A1"]}]},{"name":"Progenitor","subtypes":[{"name":"Chondroprogenitor","markers":["GDF5","CD34"]}]}],"notes":"Articular cartilage. Consider zonal (superficial/mid/deep) structure and OA-associated states. Confirm whether osteochondral / bone-interface cells belong here or in the bone block to avoid double-counting.\n"},"tendon":{"tissue_id":"tendon","default_assay":"snRNA-seq","disease_conditions":["Control","Tendinopathy"],"min_cells_per_subtype":20,"cell_ontology":[{"name":"Tenocyte","subtypes":[{"name":"Tenocyte","markers":["SCX","MKX","TNMD"]},{"name":"Tenocyte-Fibro","markers":["COL1A1","COL3A1"]}]},{"name":"Progenitor","subtypes":[{"name":"Tendon-stem-progenitor","markers":["PDGFRA","THY1"]}]},{"name":"Vascular","subtypes":[{"name":"Endothelial","markers":["PECAM1","VWF"]},{"name":"Pericyte","markers":["PDGFRB","RGS5"]}]},{"name":"Immune","subtypes":[{"name":"Macrophage","markers":["CD68","MRC1"]}]}],"notes":"Confirm enthesis (bone-tendon junction) handling and whether to separate mid-substance from peritenon populations.\n"},"bone_marrow":{"tissue_id":"bone_marrow","default_assay":"scRNA-seq","disease_conditions":["Control","Disease"],"min_cells_per_subtype":20,"cell_ontology":[{"name":"HSPC","subtypes":[{"name":"HSC-MPP","markers":["CD34","AVP"]}]},{"name":"Erythroid","subtypes":[{"name":"Erythroid","markers":["GYPA","HBB"]}]},{"name":"Myeloid","subtypes":[{"name":"Granulocyte-progenitor","markers":["MPO","ELANE"]},{"name":"Monocyte","markers":["LYZ","CD14"]}]},{"name":"Lymphoid","subtypes":[{"name":"T-cell","markers":["CD3E"]},{"name":"B-cell","markers":["MS4A1","CD79A"]},{"name":"NK","markers":["NKG7","GNLY"]}]},{"name":"Megakaryocyte","subtypes":[{"name":"Megakaryocyte","markers":["PPBP","PF4"]}]},{"name":"Stroma","subtypes":[{"name":"MSC-CAR","markers":["LEPR","CXCL12"]}]}],"notes":"Hematopoietic + stromal niche. Decide granularity of the hematopoietic hierarchy (progenitor vs mature) and whether adipocytes are included.\n"},"bone":{"tissue_id":"bone","default_assay":"snRNA-seq","disease_conditions":["Control","Osteoporosis"],"min_cells_per_subtype":20,"cell_ontology":[{"name":"Osteoblast","subtypes":[{"name":"Osteoblast","markers":["SP7","BGLAP","COL1A1"]}]},{"name":"Osteocyte","subtypes":[{"name":"Osteocyte","markers":["SOST","DMP1","MEPE"]}]},{"name":"Osteoclast","subtypes":[{"name":"Osteoclast","markers":["CTSK","ACP5","MMP9"]}]},{"name":"Skeletal-stem","subtypes":[{"name":"MSC-SSC","markers":["LEPR","GREM1"]}]},{"name":"Chondrocyte","subtypes":[{"name":"Growth-plate-chondrocyte","markers":["COL2A1","ACAN"]}]},{"name":"Vascular","subtypes":[{"name":"Endothelial","markers":["PECAM1","EMCN"]}]}],"notes":"Coordinate the bone-cartilage interface with the cartilage champion, and the marrow-resident populations with the bone_marrow champion, so shared cells are assigned to exactly one tissue block.\n"},"ivd":{"tissue_id":"ivd","default_assay":"snRNA-seq","disease_conditions":["Control","Degeneration"],"min_cells_per_subtype":20,"cell_ontology":[{"name":"Nucleus-pulposus","subtypes":[{"name":"NP-cell","markers":["KRT8","KRT19","ACAN"]},{"name":"Notochordal","markers":["TBXT","KRT18"]}]},{"name":"Annulus-fibrosus","subtypes":[{"name":"AF-cell","markers":["COL1A1","COL3A1","SFRP2"]}]},{"name":"Cartilage-endplate","subtypes":[{"name":"CEP-chondrocyte","markers":["COL2A1","ACAN"]}]},{"name":"Immune","subtypes":[{"name":"Macrophage","markers":["CD68"]}]}],"notes":"Confirm the three anatomical compartments (NP / AF / cartilage endplate) and how notochordal cells are treated across donor ages.\n"},"synovium":{"tissue_id":"synovium","default_assay":"scRNA-seq","disease_conditions":["Control","RheumatoidArthritis","Osteoarthritis"],"min_cells_per_subtype":20,"cell_ontology":[{"name":"Fibroblast","subtypes":[{"name":"Fibroblast-lining","markers":["PRG4","CD55"]},{"name":"Fibroblast-sublining","markers":["THY1","DKK3"]}]},{"name":"Macrophage","subtypes":[{"name":"Macrophage-lining","markers":["TREM2","CX3CR1"]},{"name":"Macrophage-sublining","markers":["MERTK","LYVE1"]}]},{"name":"Vascular","subtypes":[{"name":"Endothelial","markers":["PECAM1","VWF"]},{"name":"Pericyte","markers":["PDGFRB","NOTCH3"]}]},{"name":"Lymphocyte","subtypes":[{"name":"T-cell","markers":["CD3E"]},{"name":"B-Plasma","markers":["MS4A1","MZB1"]}]}],"notes":"Lining vs sublining distinction is central. In inflammatory disease expect expanded immune compartments; align labels with the AMP/RA synovium atlas.\n"},"skeletal_muscle":{"tissue_id":"skeletal_muscle","default_assay":"snRNA-seq","disease_conditions":["Control","Sarcopenia"],"min_cells_per_subtype":20,"cell_ontology":[{"name":"Myonucleus","subtypes":[{"name":"Myonucleus-Type-I","markers":["MYH7","TNNT1"]},{"name":"Myonucleus-Type-II","markers":["MYH2","MYH1","TNNT3"]},{"name":"Myonucleus-NMJ","markers":["CHRNE","COLQ"]}]},{"name":"Satellite","subtypes":[{"name":"Satellite-Quiescent","markers":["PAX7","SPRY1"]},{"name":"Satellite-Activated","markers":["MYF5","MYOD1"]}]},{"name":"Endothelial","subtypes":[{"name":"Endothelial-Capillary","markers":["PECAM1","CD36"]},{"name":"Endothelial-Venous","markers":["PECAM1","ACKR1"]}]},{"name":"Mural","subtypes":[{"name":"Pericyte","markers":["PDGFRB","RGS5"]},{"name":"SMC","markers":["ACTA2","MYH11"]}]},{"name":"Immune","subtypes":[{"name":"Macrophage","markers":["MRC1","CD163"]},{"name":"Tcell","markers":["CD3E","CD8A"]}]},{"name":"Fibroblast","subtypes":[{"name":"Fibroblast","markers":["SCX","TNMD"]}]}],"notes":"Multinucleated fibres make snRNA-seq the norm. Myonuclei dominate; capture enough cells to recover rare NMJ/MTJ and activated satellite populations.\n"}}},"criteriaData":{"champion_criteria":[{"id":"min_counts","description":"Every cell has more than 300 total counts.","field":"obs.nCount_RNA","aggregate":"min","operator":">","threshold":300,"status":"required"},{"id":"max_mito_snRNA","description":"Mitochondrial fraction under 5% for single-nucleus assays.","when":"obs.assay == \"snRNA-seq\"","field":"obs.percent_mt","aggregate":"max","operator":"<","threshold":5,"units":"percent","status":"required"},{"id":"max_mito_scRNA","description":"Mitochondrial fraction under 20% for single-cell assays.","when":"obs.assay == \"scRNA-seq\"","field":"obs.percent_mt","aggregate":"max","operator":"<","threshold":20,"units":"percent","status":"required"},{"id":"annotation_depth","description":"Both author-provided label layers are present — a broad author_celltype AND a specific author_cell_subtype (not just one of them).\n","field":"obs.annotations.levels","operator":">=","threshold":2,"status":"required"},{"id":"celltype_well_defined","description":"Each author_cell_subtype nests under exactly one author_celltype and is represented by a reasonable number of cells (proxy for well-resolved cell types).\n","checks":["every author_cell_subtype maps to exactly one author_celltype","min cells per author_cell_subtype >= 20"],"status":"required"},{"id":"donor_count","description":"At least 10 donors.","field":"obs.donor_id","aggregate":"n_unique","operator":">=","threshold":10,"status":"recommended"},{"id":"control_and_disease","description":"Includes Control and, where available, disease donors.","field":"obs.disease_status","check":"contains \"Control\" and >= 2 distinct values","status":"recommended"},{"id":"cell_count","description":"At least 50,000 cells.","field":"obs","aggregate":"n_rows","operator":">=","threshold":50000,"status":"recommended"}]},"rosterData":{"champions_roster":{"cartilage":[{"name":"Hironori Hojo","affiliation":"Osaka University","email":"hojo.hironori.dent@osaka-u.ac.jp","confirmed":true}],"tendon":[{"name":"Sarah Snelling","affiliation":"University of Oxford (NDORMS)","email":"sarah.snelling@ndorms.ox.ac.uk","confirmed":true},{"name":"Anne Nichols","affiliation":"University of Rochester Medical Center","email":"Anne_Nichols@urmc.rochester.edu","confirmed":true}],"bone_marrow":[{"name":"Noriaki Ono","affiliation":"UTHealth Houston","email":"Noriaki.Ono@uth.tmc.edu","confirmed":true}],"bone":[{"name":"Marc N. Wein","affiliation":"Massachusetts General Hospital / Harvard","email":"MNWEIN@mgh.harvard.edu","confirmed":true},{"name":"Sze Kwong \"Byron\" Chan","affiliation":"Massachusetts General Hospital / Harvard","email":"skchan@mgh.harvard.edu","confirmed":true}],"ivd":[{"name":"Dmitriy Sheyn","affiliation":"Cedars-Sinai Medical Center","email":"Dmitriy.Sheyn@csmc.edu","confirmed":true}],"synovium":[{"name":"Kevin Wei","affiliation":"Brigham and Women's Hospital","email":"kwei@bwh.harvard.edu","confirmed":true}],"skeletal_muscle":[{"name":"Carla Cohen","affiliation":"University of Oxford (MRC WIMM)","email":"Carla.cohen@ndorms.ox.ac.uk","confirmed":true}]}}}</script>
+<!-- The block above is generated by `python3 docs/build_docs.py` from the
+     YAML files in schemas/ — don't hand-edit it. Re-run that script after
+     changing any of those YAML files, then re-open this page (double-click
+     works directly, no server needed). -->
+<script>
+const side=document.getElementById('side');
+document.getElementById('menu').addEventListener('click',()=>side.classList.toggle('open'));
+side.addEventListener('click',e=>{if(e.target.classList.contains('nav-link'))side.classList.remove('open');});
+
+function initNavHighlighting(){
+  const links=[...document.querySelectorAll('.nav-link')];
+  const tocLinks=[...document.querySelectorAll('.toc a')];
+  links.forEach(l=>{l.dataset.t=l.getAttribute('href').slice(1);});
+  const secs=[...document.querySelectorAll('section[id]')];
+  const obs=new IntersectionObserver((entries)=>{
+    entries.forEach(en=>{
+      if(en.isIntersecting){
+        const id=en.target.id;
+        links.forEach(l=>l.classList.toggle('active',l.dataset.t===id));
+        tocLinks.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+id));
+      }
+    });
+  },{rootMargin:'-72px 0px -70% 0px',threshold:0});
+  secs.forEach(s=>obs.observe(s));
+}
+
+function esc(s){
+  if(s===undefined||s===null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function badge(required){
+  return required ? '<span class="badge req">Required</span>' : '<span class="badge opt">Optional</span>';
+}
+function attrsOf(schema,className){
+  return (schema.classes[className] && schema.classes[className].attributes) || {};
+}
+function parseComments(attr){
+  const map=new Map();
+  (attr.comments||[]).forEach(c=>{
+    const idx=c.indexOf(':');
+    if(idx===-1){map.set(c,'');return;}
+    map.set(c.slice(0,idx).trim(),c.slice(idx+1).trim());
+  });
+  return map;
+}
+function defaultExtra(attr){
+  const m=parseComments(attr);
+  return [...m.entries()].map(([k,v])=>v?`${k}: ${v}`:k).join(' &middot; ');
+}
+function typeLabel(schema,attr){
+  const range=attr.range||schema.default_range||'string';
+  const enumDef=schema.enums&&schema.enums[range];
+  if(enumDef) return Object.keys(enumDef.permissible_values).join(' | ');
+  return range;
+}
+function loadEmbeddedData(){
+  const el=document.getElementById('embedded-schema-data');
+  if(!el) throw new Error('missing #embedded-schema-data — regenerate with docs/build_docs.py');
+  return JSON.parse(el.textContent);
+}
+
+function renderOverview(schema,tissueCount){
+  document.getElementById('hdr-version').textContent='v'+schema.version;
+  document.getElementById('hdr-tissue-count').textContent=`${tissueCount} musculoskeletal tissues`;
+  document.getElementById('overview-eyebrow').textContent=`Specification · v${schema.version}`;
+  document.getElementById('overview-title').textContent=schema.name;
+  document.getElementById('overview-lede').textContent=schema.description;
+  const statusEl=document.getElementById('overview-status');
+  statusEl.textContent=schema.status;
+  statusEl.className='sbadge '+(schema.status==='draft'?'draft':'done');
+  document.getElementById('overview-applies-to').textContent=`musculoskeletal tissues (${tissueCount})`;
+
+  const maintainers=(schema.comments||[]).map(c=>{
+    const idx=c.indexOf(':');
+    const role=c.slice(0,idx).trim().replace(/_/g,' ');
+    const rest=c.slice(idx+1).trim();
+    return `${esc(rest)} <span class="muted">(${esc(role)})</span>`;
+  }).join(' &middot; ');
+  document.getElementById('overview-maintainers').innerHTML=maintainers?('Maintained by '+maintainers+'.'):'';
+}
+
+function fieldRow(schema,name,a,extraBits){
+  const extra=(extraBits||[]).filter(Boolean).join(' ');
+  return `<tr><td><code class="fld">${esc(name)}</code></td><td>${badge(a.required)}</td><td><span class="typ">${typeLabel(schema,a)}</span></td>
+    <td>${esc(a.description||'')}${extra?`<div class="extra">${extra}</div>`:''}</td></tr>`;
+}
+// extraFn(name,a) returns an array of extra HTML snippets for a field; when
+// omitted, falls back to auto-rendering the attribute's `comments` (e.g.
+// "nests_under: ..."). Pass a custom extraFn to override that default, e.g.
+// to reformat location_h5ad/location_seurat comments instead of listing them raw.
+function renderFieldRows(tbodyId,schema,className,names,extraFn){
+  const attrs=attrsOf(schema,className);
+  document.getElementById(tbodyId).innerHTML=names.map(name=>{
+    const a=attrs[name];
+    const bits=extraFn?extraFn(name,a):[defaultExtra(a)];
+    return fieldRow(schema,name,a,bits);
+  }).join('');
+}
+
+function renderObjectSection(schema){
+  const formatEnum=schema.enums.FileFormatEnum.permissible_values;
+  document.getElementById('object-formats').innerHTML=Object.entries(formatEnum).map(([key,pv])=>{
+    const desc=(pv&&pv.description)||'';
+    const parts=desc.split('—').map(s=>s.trim());
+    const subtitle=parts[0]||'';
+    const tag=(parts[1]||'').replace(/\.$/,'');
+    return `<div class="fmt"><code>.${esc(key)}</code><span>${esc(subtitle)}</span>${tag?`<em>${esc(tag)}</em>`:''}</div>`;
+  }).join('');
+
+  renderFieldRows('object-matrix-table-body',schema,'ObjectSpec',
+    ['raw_counts','normalized','scaled','ambient_corrected','ambient_correction_method'],
+    (name,a)=>{
+      const loc=[...parseComments(a).entries()].map(([k,v])=>{
+        const label=k==='location_h5ad'?'h5ad':k==='location_seurat'?'Seurat':k;
+        return `${label}: <code>${esc(v)}</code>`;
+      }).join(' &middot; ');
+      return loc?[`Location &mdash; ${loc}`]:[];
+    });
+
+  renderFieldRows('object-filter-table-body',schema,'ObjectSpec',['filter_status','filtering_criteria']);
+
+  const embAttrs=attrsOf(schema,'EmbeddingSpec');
+  document.getElementById('object-embeddings-table-body').innerHTML=Object.entries(embAttrs).map(([name,a])=>
+    fieldRow(schema,name,a,[defaultExtra(a)])
+  ).join('');
+}
+
+function renderAnnotations(schema){
+  renderFieldRows('annotations-table-body',schema,'CellObservation',
+    ['author_celltype','ontology_celltype','author_cell_subtype','ontology_cell_subtype']);
+}
+
+function renderDonor(schema){
+  const order=['donor_id','disease_status','age_band','sex','assay','tissue_type','anatomical_site','microanatomy','additional_metadata'];
+  renderFieldRows('donor-table-body',schema,'CellObservation',order,(name,a)=>{
+    if(name==='disease_status') return ['Recommended baseline values: <code>Control</code>, <code>Disease</code> (tissue may refine).',defaultExtra(a)];
+    if(name==='sex'||name==='assay'){
+      const vals=typeLabel(schema,a).split(' | ').map(v=>`<code>${esc(v)}</code>`).join(', ');
+      return ['Allowed: '+vals+'.'+(name==='assay'?' <strong>Drives which mitochondrial threshold applies</strong> in the champion criteria.':''),defaultExtra(a)];
+    }
+    return [defaultExtra(a)];
+  });
+}
+
+function renderQC(schema){
+  renderFieldRows('qc-table-body',schema,'CellObservation',
+    ['nCount_RNA','nFeature_RNA','percent_mt','percent_ribo','percent_hb']);
+}
+
+function renderVar(schema){
+  renderFieldRows('var-table-body',schema,'GeneVariable',
+    ['gene_id','gene_symbol','mt','ribo','hb','highly_variable']);
+}
+
+function renderUns(schema){
+  renderFieldRows('uns-schema-table-body',schema,'DatasetProvenance',
+    ['standard','version','tissue','gene_id_system','certification','annotation_method','annotation_reference']);
+  renderFieldRows('uns-experimental-table-body',schema,'ExperimentalMetadata',
+    ['suspension_type','library_platform','library_platform_ontology','reference_genome','alignment_software',
+     'introns_included','tissue_collection_method','storage_method','dissociation_method','sequencing_batch']);
+  renderFieldRows('uns-study-table-body',schema,'StudyProvenance',
+    ['authors','publication_doi','protocol_url']);
+}
+
+function renderRequiredStructure(schema){
+  const items=[];
+  items.push(`object.format is one of [${Object.keys(schema.enums.FileFormatEnum.permissible_values).join(', ')}]`);
+  Object.entries(attrsOf(schema,'ObjectSpec')).forEach(([name,a])=>{
+    if(name!=='format'&&a.required) items.push(`object.${name} present`);
+  });
+  Object.entries(attrsOf(schema,'CellObservation')).forEach(([name,a])=>{
+    if(a.required) items.push(`obs.${name} present`);
+  });
+  Object.entries(attrsOf(schema,'GeneVariable')).forEach(([name,a])=>{
+    if(a.required) items.push(`var.${name} present`);
+  });
+  items.push('uns.schema present');
+  Object.entries(attrsOf(schema,'DatasetProvenance')).forEach(([name,a])=>{
+    if(a.required) items.push(`uns.schema.${name} present`);
+  });
+  items.push('uns.experimental present');
+  Object.entries(attrsOf(schema,'ExperimentalMetadata')).forEach(([name,a])=>{
+    if(a.required) items.push(`uns.experimental.${name} present`);
+  });
+  items.push('uns.study present');
+  Object.entries(attrsOf(schema,'StudyProvenance')).forEach(([name,a])=>{
+    if(a.required) items.push(`uns.study.${name} present`);
+  });
+  document.getElementById('required-structure-list').innerHTML=items.map(i=>`<li>${esc(i)}</li>`).join('');
+}
+
+function renderChampionCriteria(criteria){
+  document.getElementById('champion-criteria-body').innerHTML=criteria.map(rule=>{
+    let test;
+    if(rule.aggregate){
+      const units=rule.units==='percent'?'%':'';
+      test=`<code>${esc(rule.aggregate)}(${esc(rule.field)}) ${esc(rule.operator)} ${esc(rule.threshold)}${units}</code>`;
+    }else if(rule.checks){
+      test=rule.checks.map(c=>`&bull; ${esc(c)}`).join('<br>');
+    }else if(rule.check){
+      test=`<code>${esc(rule.check)}</code>`;
+    }else{
+      test='&mdash;';
+    }
+    const when=rule.when?`<code>${esc(rule.when)}</code>`:'&mdash;';
+    const statusBadge=rule.status==='required'?'<span class="badge req">Required</span>':'<span class="badge rec">Recommended</span>';
+    return `<tr><td><code class="fld">${esc(rule.id)}</code></td><td>${esc((rule.description||'').trim())}</td><td>${test}</td><td>${when}</td><td>${statusBadge}</td></tr>`;
+  }).join('');
+}
+
+const TISSUE_DISPLAY_NAME={ivd:'IVD',bone_marrow:'Bone marrow',skeletal_muscle:'Skeletal muscle'};
+function displayName(tissueId){
+  return TISSUE_DISPLAY_NAME[tissueId]||(tissueId.charAt(0).toUpperCase()+tissueId.slice(1));
+}
+function championStatus(champions){
+  if(!champions.length) return '<span class="pending">pending</span>';
+  const allConfirmed=champions.every(c=>c.confirmed);
+  const noneConfirmed=champions.every(c=>!c.confirmed);
+  if(allConfirmed) return '<span class="ok">&#10003;</span>';
+  if(noneConfirmed) return '<span class="pending">pending</span>';
+  return '<span class="pending">partial</span>';
+}
+
+function renderTissueNav(tissueIds){
+  document.getElementById('nav-tissue-links').innerHTML=
+    `<a class="nav-link" href="#tissue-overview">Overview &amp; roster</a>`+
+    tissueIds.map(id=>`<a class="nav-link" href="#tissue-${id}">${esc(displayName(id))}</a>`).join('');
+  document.getElementById('toc-tissue-links').innerHTML=
+    `<a href="#tissue-overview">Overview &amp; roster</a>`+
+    tissueIds.map(id=>`<a href="#tissue-${id}">${esc(displayName(id))}</a>`).join('');
+}
+
+function renderTissueRoster(profiles,roster){
+  document.getElementById('tissue-roster-body').innerHTML=Object.values(profiles).map(p=>{
+    const champions=roster[p.tissue_id]||[];
+    const names=champions.map(c=>esc(c.name)).join('<br>');
+    const contacts=champions.map(c=>`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`).join('<br>');
+    return `<tr><td><a href="#tissue-${p.tissue_id}"><strong>${esc(displayName(p.tissue_id))}</strong></a></td>
+      <td>${names}</td><td>${contacts}</td><td><code>${esc(p.default_assay)}</code></td>
+      <td>${championStatus(champions)}</td></tr>`;
+  }).join('');
+}
+
+function renderCellOntologyTree(cellOntology){
+  return cellOntology.map(ct=>{
+    const subtypes=(ct.subtypes||[]).map(st=>{
+      const markers=(st.markers||[]).map(m=>`<span class="mk">${esc(m)}</span>`).join(' ');
+      return `<div class="t2"><span class="t2-name">${esc(st.name)}</span><span class="mks">${markers}</span></div>`;
+    }).join('');
+    return `<div class="t1"><span class="t1-name">${esc(ct.name)}</span><span class="t1-tag">Level&nbsp;1</span></div><div class="t2wrap">${subtypes}</div>`;
+  }).join('');
+}
+
+function renderTissueSections(profiles,roster){
+  document.getElementById('tissue-sections').innerHTML=Object.values(profiles).map(p=>{
+    const conditions=(p.disease_conditions||[]).map(c=>`<span class="cond">${esc(c)}</span>`).join(' ');
+    const champions=roster[p.tissue_id]||[];
+    const rosterRows=champions.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.affiliation||'')}</td>
+      <td><a href="mailto:${esc(c.email)}">${esc(c.email)}</a></td>
+      <td>${c.confirmed?'<span class="ok">&#10003; confirmed</span>':'<span class="pending">pending</span>'}</td></tr>`).join('');
+    const subtypeCount=(p.cell_ontology||[]).reduce((n,ct)=>n+(ct.subtypes||[]).length,0);
+    const heading=esc(displayName(p.tissue_id))+(p.tissue_id==='ivd'?' &mdash; intervertebral disc':'');
+    return `<section id="tissue-${p.tissue_id}">
+  <h2>${heading}</h2>
+  <div class="meta-row"><span class="meta-item"><span class="ml">Assay</span><code>${esc(p.default_assay)}</code></span>
+    ${p.min_cells_per_subtype!==undefined?`<span class="meta-item"><span class="ml">Min cells / subtype</span><code>${esc(p.min_cells_per_subtype)}</code></span>`:''}</div>
+  <div class="meta-row"><span class="meta-item"><span class="ml">Disease conditions</span>${conditions}</span></div>
+  <table class="roster mini"><thead><tr><th>Champion</th><th>Affiliation</th><th>Contact</th><th>Role status</th></tr></thead><tbody>${rosterRows}</tbody></table>
+  ${p.notes?`<div class="note tissue-note"><strong>Champion note.</strong> ${esc(p.notes.trim())}</div>`:''}
+  <h3>Cell ontology <span class="count">${(p.cell_ontology||[]).length} broad &middot; ${subtypeCount} subtypes</span></h3>
+  <p class="muted">Two-level labels for this tissue. Marker genes are shown by symbol for
+  readability; in the delivered data they are keyed by <code>gene_id</code>.</p>
+  <div class="tree">${renderCellOntologyTree(p.cell_ontology||[])}</div>
+</section>`;
+  }).join('');
+}
+
+function init(){
+  try{
+    const {schema,tissueData,criteriaData,rosterData}=loadEmbeddedData();
+    const profiles=tissueData.tissue_profiles;
+    const tissueIds=Object.keys(profiles);
+    const roster=rosterData.champions_roster||{};
+
+    renderOverview(schema,tissueIds.length);
+    renderObjectSection(schema);
+    renderAnnotations(schema);
+    renderDonor(schema);
+    renderQC(schema);
+    renderVar(schema);
+    renderUns(schema);
+    renderRequiredStructure(schema);
+    renderChampionCriteria(criteriaData.champion_criteria);
+    renderTissueNav(tissueIds);
+    renderTissueRoster(profiles,roster);
+    renderTissueSections(profiles,roster);
+
+    initNavHighlighting();
+  }catch(err){
+    document.getElementById('load-error').style.display='block';
+    document.getElementById('load-error-detail').textContent=err.message;
+    console.error(err);
+  }
+}
+init();
+</script>
+</body></html>
