@@ -147,6 +147,28 @@ enums:
       90+:
       unknown:
 
+  TissueConditionEnum:
+    description: >-
+      Local condition of the sampled tissue itself, as distinct from the
+      donor's overall disease_status — e.g. an osteoarthritic donor can
+      contribute both preserved and lesional cartilage from the same joint.
+      Kept tissue-agnostic; how each value maps onto a given tissue (e.g.
+      tendinopathic vs. healthy-appearing tendon, degenerated vs. intact
+      disc) is described in that tissue's TissueProfile notes.
+    permissible_values:
+      intact:
+        description: >-
+          Preserved, macroscopically normal-appearing tissue (e.g. intact
+          cartilage), whether from a control or an affected donor.
+      perilesional:
+        description: Tissue immediately adjacent to a lesion or damaged region.
+      lesional:
+        description: Damaged, degenerated, or lesional tissue (e.g. eroded/fibrillated cartilage).
+      not_applicable:
+        description: Condition not meaningful for this sample (e.g. a tissue with no focal lesions).
+      unknown:
+        description: Condition not recorded.
+
   GeneIdSystemEnum:
     description: Identifier system used as the gene key in var.gene_id.
     permissible_values:
@@ -369,13 +391,47 @@ classes:
           Level-2 subtypes will not have a distinct CL term).
       donor_id:
         required: true
-        description: Stable identifier for the biological donor/sample of origin.
+        description: Stable identifier for the biological donor of origin.
+      sample_id:
+        required: false
+        description: >-
+          Stable identifier for the physical tissue sample the cell came
+          from. Strongly recommended, and needed whenever a donor contributes
+          more than one sample (e.g. intact and lesional cartilage from the
+          same joint), so that sample-level fields like tissue_condition and
+          disease_severity_grade can be told apart within a donor.
+        comments:
+          - "nests_under: donor_id"
       disease_status:
         required: false
         description: >-
           Clinical group; use "Control" for unaffected donors. Baseline
           recommended values are Control/Disease — each tissue_profile refines
           this with its own disease_conditions list.
+      disease_severity_scale:
+        required: false
+        description: >-
+          Grading system used for disease_severity_grade, e.g. "OARSI" or
+          "Mankin" (cartilage), "Pfirrmann" (IVD), "Krenn synovitis score"
+          (synovium), "Bonar" (tendon). Should be one of the tissue's
+          severity_scales (see TissueProfile). Required if
+          disease_severity_grade is set.
+      disease_severity_grade:
+        required: false
+        description: >-
+          Disease severity or histopathological grade of the sample, when
+          available, expressed on disease_severity_scale (e.g. "3.5" on
+          OARSI, "IV" on Pfirrmann). Stored as a string because scales mix
+          integer, decimal, and Roman-numeral grades. Grades are sample-level
+          where the scale is histological, so may differ between samples
+          from the same donor.
+      tissue_condition:
+        range: TissueConditionEnum
+        required: false
+        description: >-
+          Local condition of the sampled tissue, e.g. intact vs. lesional
+          cartilage. Independent of disease_status: an affected donor may
+          contribute intact tissue. See TissueConditionEnum.
       age_band:
         range: AgeBandEnum
         description: >-
@@ -689,6 +745,12 @@ classes:
       disease_conditions:
         multivalued: true
         description: Clinical groups in this tissue's cohort. Should include "Control".
+      severity_scales:
+        multivalued: true
+        description: >-
+          Accepted disease severity / histopathological grading systems for
+          this tissue (e.g. [OARSI, Mankin] for cartilage), used as the
+          vocabulary for obs.disease_severity_scale.
       min_cells_per_subtype:
         range: integer
         description: Optional override of the champion_criteria celltype_well_defined default (20).
